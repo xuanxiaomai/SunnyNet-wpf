@@ -1,0 +1,1157 @@
+<Window x:Class="SunnyNet.Wpf.Windows.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="程序设置"
+        Width="1080"
+        Height="700"
+        MinWidth="940"
+        MinHeight="600"
+        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <x:Array x:Key="ReplaceRuleTypeItems" Type="{x:Type sys:String}">
+            <sys:String>String(UTF8)</sys:String>
+            <sys:String>String(GBK)</sys:String>
+            <sys:String>Base64</sys:String>
+            <sys:String>HEX</sys:String>
+            <sys:String>响应文件</sys:String>
+        </x:Array>
+
+        <x:Array x:Key="RequestCertificateRuleItems" Type="{x:Type sys:String}">
+            <sys:String>仅发送</sys:String>
+            <sys:String>解析及发送</sys:String>
+            <sys:String>仅解析</sys:String>
+        </x:Array>
+
+        <x:Array x:Key="McpClientItems" Type="{x:Type sys:String}">
+            <sys:String>Cursor / Claude</sys:String>
+            <sys:String>Codex</sys:String>
+        </x:Array>
+
+        <Style x:Key="SettingsNavListBoxStyle" TargetType="{x:Type ListBox}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="SettingsNavItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border x:Name="ItemBorder"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                CornerRadius="6">
+                            <Grid Height="32">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Indicator"
+                                        Width="2"
+                                        Background="Transparent"
+                                        CornerRadius="2" />
+                                <ContentPresenter Grid.Column="1"
+                                                  Margin="8,0,8,0"
+                                                  VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource SurfaceHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#F5F9FF" />
+                                <Setter TargetName="Indicator" Property="Background" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsPageTitleTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style x:Key="SettingsPageHintTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="SettingsGroupTitleTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style x:Key="SettingsSwitchToggleButtonStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="#CDD8E6" />
+            <Setter Property="BorderBrush" Value="#CDD8E6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="SwitchTrack"
+                                Width="{TemplateBinding Width}"
+                                Height="{TemplateBinding Height}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="14">
+                            <Grid Margin="2">
+                                <Ellipse x:Name="SwitchThumb"
+                                         Width="22"
+                                         Height="22"
+                                         HorizontalAlignment="Left"
+                                         Fill="White">
+                                    <Ellipse.Effect>
+                                        <DropShadowEffect BlurRadius="10"
+                                                          Direction="270"
+                                                          Opacity="0.12"
+                                                          ShadowDepth="2"
+                                                          Color="#233143" />
+                                    </Ellipse.Effect>
+                                </Ellipse>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SwitchTrack" Property="Opacity" Value="0.92" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="#4CC563" />
+                                <Setter TargetName="SwitchTrack" Property="BorderBrush" Value="#4CC563" />
+                                <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsFieldLabelTextStyle" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FormLabelTextStyle}">
+            <Setter Property="Width" Value="88" />
+            <Setter Property="Margin" Value="0,4,10,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="SettingsSectionDividerStyle" TargetType="{x:Type Border}">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="0,12,0,0" />
+            <Setter Property="Background" Value="{StaticResource DividerBrush}" />
+        </Style>
+
+        <Style x:Key="SettingsSmallActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="MinWidth" Value="98" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="SettingsPrimaryActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="MinWidth" Value="106" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="SettingsCompactTextBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="9,4" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="SettingsCompactComboBoxStyle" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="SettingsEditorTextBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="SettingsSubtlePanelStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#FAFCFF" />
+            <Setter Property="BorderBrush" Value="#E7EDF6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <Style x:Key="SettingsMetaLabelTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="SettingsMetaValueTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="SettingsReadOnlyMonospaceTextBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="FontFamily" Value="Consolas, Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="SettingsInfoChipBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#F8FBFF" />
+            <Setter Property="BorderBrush" Value="#E4EBF5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="9,6" />
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="MinWidth" Value="150" />
+        </Style>
+
+        <Style x:Key="SettingsInfoChipLabelTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        </Style>
+
+        <Style x:Key="SettingsInfoChipValueTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="SettingsDataGridStyle" TargetType="{x:Type DataGrid}" BasedOn="{StaticResource {x:Type DataGrid}}">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="RowHeight" Value="30" />
+            <Setter Property="MinRowHeight" Value="30" />
+            <Setter Property="Margin" Value="0,10,0,0" />
+        </Style>
+
+        <Style x:Key="SettingsStateTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Style.Triggers>
+                <Trigger Property="Text" Value="驱动已加载">
+                    <Setter Property="Foreground" Value="#1F8B4C" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProcessToolbarBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#FBFCFE" />
+            <Setter Property="BorderBrush" Value="#E1E7F0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10,6" />
+        </Style>
+
+        <Style x:Key="ProcessWorkspaceBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#E1E7F0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+
+        <Style x:Key="ProcessPanelTitleTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ProcessCaptionTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ProcessToolbarTextStyle" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource ProcessCaptionTextStyle}">
+            <Setter Property="Foreground" Value="#56657A" />
+        </Style>
+
+        <Style x:Key="ProcessToolbarSeparatorStyle" TargetType="{x:Type Border}">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Margin" Value="10,3" />
+            <Setter Property="Background" Value="#E6ECF4" />
+        </Style>
+
+        <Style x:Key="ProcessToolbarCheckBoxStyle" TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ProcessMiniButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Width" Value="96" />
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="ProcessPrimaryMiniButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Padding" Value="12,4" />
+            <Setter Property="Width" Value="96" />
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="ProcessWorkspacePanelBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#E3E9F2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+        </Style>
+
+        <Style x:Key="ProcessPaneHeaderBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#F7FAFE" />
+            <Setter Property="BorderBrush" Value="#E8EEF6" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="10,7" />
+        </Style>
+
+        <Style x:Key="ProcessPaneActionBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#EEF2F7" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="10,6" />
+        </Style>
+
+        <Style x:Key="ProcessDataGridColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#58687D" />
+            <Setter Property="Background" Value="#F7FAFE" />
+            <Setter Property="BorderBrush" Value="#E8EEF6" />
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ProcessDataGridCellStyle" TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Setter Property="Padding" Value="6,0,6,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ProcessDataGridRowStyle" TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F7FAFE" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EEF5FF" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProcessDataGridStyle" TargetType="{x:Type DataGrid}" BasedOn="{StaticResource SettingsDataGridStyle}">
+            <Setter Property="RowHeight" Value="24" />
+            <Setter Property="MinRowHeight" Value="24" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="AlternatingRowBackground" Value="#FBFDFF" />
+            <Setter Property="CellStyle" Value="{StaticResource ProcessDataGridCellStyle}" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource ProcessDataGridColumnHeaderStyle}" />
+            <Setter Property="RowStyle" Value="{StaticResource ProcessDataGridRowStyle}" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="VerticalGridLinesBrush" Value="#EEF2F7" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style x:Key="ProcessGridTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Margin" Value="6,0,2,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="ProcessGridInputTextBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinWidth" Value="150" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="ProcessGridCheckBoxStyle" TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="170" />
+            <ColumnDefinition Width="18" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Margin="4,4,4,10">
+                    <TextBlock FontSize="17"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Text="设置" />
+                    <TextBlock Margin="0,4,0,0"
+                               Style="{StaticResource SettingsPageHintTextStyle}"
+                               Text="选择分类" />
+                </StackPanel>
+
+                <ListBox x:Name="SectionListBox"
+                         Grid.Row="1"
+                         Style="{StaticResource SettingsNavListBoxStyle}"
+                         ItemContainerStyle="{StaticResource SettingsNavItemStyle}"
+                         SelectionChanged="SectionListBox_SelectionChanged">
+                    <ListBoxItem x:Name="BasicSectionItem" Tag="Basic">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE713;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="常规设置" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="McpSectionItem" Tag="Mcp">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE968;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="MCP 集成" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="SslSectionItem" Tag="Ssl">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE72E;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="SSL 证书" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="MustTcpSectionItem" Tag="MustTcp">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE8D7;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="强制走 TCP" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="ProxySectionItem" Tag="Proxy">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE968;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="上游网关" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="HostsSectionItem" Tag="Hosts">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE774;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="HOSTS 设置" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="ScriptSectionItem" Tag="Script">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE943;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="脚本编辑" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="ProcessSectionItem" Tag="Process">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xE7F8;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="进程拦截" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="RequestCertSectionItem" Tag="RequestCert">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="&#xEB95;" />
+                            <TextBlock Margin="10,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" Text="请求证书" />
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Grid Margin="18,16,18,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="1" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock x:Name="SectionTitleTextBlock"
+                               Style="{StaticResource SettingsPageTitleTextStyle}"
+                               Text="常规设置" />
+                    <TextBlock x:Name="SectionSubtitleTextBlock"
+                               Margin="0,4,0,0"
+                               Style="{StaticResource SettingsPageHintTextStyle}"
+                               Text="配置监听端口、协议禁用项和基础身份验证设置。" />
+                </StackPanel>
+
+                <Border Grid.Row="2" Background="{StaticResource DividerBrush}" />
+
+                <ScrollViewer Grid.Row="4"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <StackPanel x:Name="BasicSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="网络监听" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="基础监听参数和协议开关。" />
+                            <Grid Margin="0,16,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource SettingsFieldLabelTextStyle}" Text="监听端口" />
+                                <TextBox Grid.Column="1"
+                                         MaxWidth="220"
+                                         HorizontalAlignment="Left"
+                                         Style="{StaticResource SettingsCompactTextBoxStyle}"
+                                         Text="{Binding Settings.Port}" />
+                            </Grid>
+                            <CheckBox Margin="92,14,0,0" Content="禁止 TCP" IsChecked="{Binding Settings.DisableTcp}" />
+                            <CheckBox Margin="92,6,0,0" Content="禁止 UDP" IsChecked="{Binding Settings.DisableUdp}" />
+                            <CheckBox Margin="92,6,0,0" Content="禁止浏览器缓存" IsChecked="{Binding Settings.DisableCache}" />
+                            <CheckBox Margin="92,6,0,0" Content="开启身份验证模式" IsChecked="{Binding Settings.Authentication}" />
+                            <Border Style="{StaticResource SettingsSectionDividerStyle}" />
+                            <Grid Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource SettingsPrimaryActionButtonStyle}"
+                                        Click="ApplyBasic_Click"
+                                        Content="保存设置" />
+                                <Button Grid.Column="3"
+                                        Style="{StaticResource SettingsSmallActionButtonStyle}"
+                                        Click="CheckUpdate_Click"
+                                        Content="检查更新" />
+                                <TextBlock Grid.Column="4"
+                                           Margin="12,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource SettingsPageHintTextStyle}"
+                                           Text="{Binding CurrentVersionText, StringFormat=当前版本：{0}}" />
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel x:Name="McpSectionPanel" Visibility="Collapsed">
+                            <Border Style="{StaticResource SettingsSubtlePanelStyle}">
+                                <StackPanel>
+                                    <DockPanel LastChildFill="False">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="MCP 服务" />
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Style="{StaticResource SettingsPageHintTextStyle}"
+                                                       Text="MCP 已内置到本程序。先打开 SunnyNet 并开启 MCP，再把下面配置加到 Cursor / Claude / Codex。" />
+                                        </StackPanel>
+                                        <ToggleButton DockPanel.Dock="Right"
+                                                      VerticalAlignment="Center"
+                                                      Style="{StaticResource SettingsSwitchToggleButtonStyle}"
+                                                      IsChecked="{Binding Mcp.Enabled, Mode=TwoWay}" />
+                                    </DockPanel>
+
+                                    <WrapPanel Margin="0,12,0,0">
+                                        <Border Style="{StaticResource SettingsInfoChipBorderStyle}">
+                                            <StackPanel>
+                                                <TextBlock Style="{StaticResource SettingsInfoChipLabelTextStyle}" Text="服务状态" />
+                                                <TextBlock Style="{StaticResource SettingsInfoChipValueTextStyle}"
+                                                           Text="{Binding Mcp.ServerStatusText}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource SettingsInfoChipBorderStyle}">
+                                            <StackPanel>
+                                                <TextBlock Style="{StaticResource SettingsInfoChipLabelTextStyle}" Text="通道" />
+                                                <TextBlock Style="{StaticResource SettingsInfoChipValueTextStyle}"
+                                                           Text="{Binding Mcp.BridgeStatusText}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource SettingsInfoChipBorderStyle}">
+                                            <StackPanel>
+                                                <TextBlock Style="{StaticResource SettingsInfoChipLabelTextStyle}" Text="工具数" />
+                                                <TextBlock Style="{StaticResource SettingsInfoChipValueTextStyle}"
+                                                           Text="{Binding Mcp.ToolCount}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource SettingsInfoChipBorderStyle}">
+                                            <StackPanel>
+                                                <TextBlock Style="{StaticResource SettingsInfoChipLabelTextStyle}" Text="刷新时间" />
+                                                <TextBlock Style="{StaticResource SettingsInfoChipValueTextStyle}"
+                                                           Text="{Binding Mcp.LastCheckedText}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+
+                                    <Border Margin="0,4,0,0"
+                                            Background="#F8FBFF"
+                                            BorderBrush="#E4EBF5"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="10" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock VerticalAlignment="Center"
+                                                       Style="{StaticResource SettingsMetaLabelTextStyle}"
+                                                       Text="MCP入库" />
+                                            <TextBox Grid.Column="1"
+                                                     VerticalContentAlignment="Center"
+                                                     IsReadOnly="True"
+                                                     Style="{StaticResource SettingsReadOnlyMonospaceTextBoxStyle}"
+                                                     Text="{Binding Mcp.EndpointUrl, Mode=OneWay}" />
+                                            <Button Grid.Column="3"
+                                                    Style="{StaticResource SettingsSmallActionButtonStyle}"
+                                                    Click="CopyMcpEndpoint_Click"
+                                                    Content="复制" />
+                                        </Grid>
+                                    </Border>
+
+                                    <DockPanel Margin="0,12,0,0" LastChildFill="False">
+                                        <Button DockPanel.Dock="Right"
+                                                Style="{StaticResource SettingsSmallActionButtonStyle}"
+                                                Click="RefreshMcp_Click"
+                                                Content="刷新状态" />
+                                    </DockPanel>
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="210" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Style="{StaticResource SettingsMetaLabelTextStyle}"
+                                                   Text="客户端" />
+                                        <ComboBox Grid.Column="1"
+                                                  HorizontalAlignment="Left"
+                                                  Width="190"
+                                                  ItemsSource="{StaticResource McpClientItems}"
+                                                  SelectedItem="{Binding Mcp.ClientKind, Mode=TwoWay}"
+                                                  Style="{StaticResource SettingsCompactComboBoxStyle}" />
+                                        <Button Grid.Column="3"
+                                                Style="{StaticResource SettingsPrimaryActionButtonStyle}"
+                                                Click="CopyMcpConfig_Click"
+                                                Content="复制配置" />
+                                    </Grid>
+
+                                    <TextBlock Margin="0,8,0,0"
+                                               Style="{StaticResource SettingsPageHintTextStyle}"
+                                               Text="{Binding Mcp.ClientConfigHintText}" />
+                                    <TextBox Height="132"
+                                             Margin="0,8,0,0"
+                                             Style="{StaticResource SettingsReadOnlyMonospaceTextBoxStyle}"
+                                             Text="{Binding Mcp.ClientConfigText, Mode=OneWay}" />
+                                    <TextBlock Margin="0,8,0,0"
+                                               Style="{StaticResource SettingsPageHintTextStyle}"
+                                               Foreground="#C3602C"
+                                               Text="{Binding Mcp.LastError}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel x:Name="SslSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="证书配置" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="配置默认证书或自定义 CA / KEY 文件。" />
+                            <Grid Margin="0,16,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource SettingsFieldLabelTextStyle}" Text="证书模式" />
+                                <ComboBox Grid.Column="1"
+                                          MaxWidth="260"
+                                          HorizontalAlignment="Left"
+                                          SelectedValue="{Binding Settings.CertMode}"
+                                          SelectedValuePath="Content"
+                                          Style="{StaticResource SettingsCompactComboBoxStyle}">
+                                    <ComboBoxItem Content="默认证书" />
+                                    <ComboBoxItem Content="自定义证书" />
+                                </ComboBox>
+                                <TextBlock Grid.Row="1" Style="{StaticResource SettingsFieldLabelTextStyle}" Text="CA 文件" />
+                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" Style="{StaticResource SettingsCompactTextBoxStyle}" Text="{Binding Settings.CaFilePath}" />
+                                <Button Grid.Row="1" Grid.Column="2" Margin="10,8,0,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="BrowseCa_Click" Content="浏览" />
+                                <TextBlock Grid.Row="2" Style="{StaticResource SettingsFieldLabelTextStyle}" Text="KEY 文件" />
+                                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" Style="{StaticResource SettingsCompactTextBoxStyle}" Text="{Binding Settings.KeyFilePath}" />
+                                <Button Grid.Row="2" Grid.Column="2" Margin="10,8,0,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="BrowseKey_Click" Content="浏览" />
+                            </Grid>
+                            <Border Style="{StaticResource SettingsSectionDividerStyle}" />
+                            <StackPanel Margin="92,14,0,0" Orientation="Horizontal">
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="InstallDefaultCert_Click" Content="安装默认证书" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="ExportDefaultCert_Click" Content="导出默认证书" />
+                                <Button Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="ApplyCert_Click" Content="保存证书" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel x:Name="MustTcpSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="强制 TCP 规则" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="每行一条规则，命中后优先按 TCP 方式处理。" />
+                            <CheckBox Margin="0,12,0,0" Content="启用强制 TCP" IsChecked="{Binding Settings.MustTcpOpen}" />
+                            <TextBox Height="220"
+                                     Margin="0,10,0,0"
+                                     AcceptsReturn="True"
+                                     Style="{StaticResource SettingsEditorTextBoxStyle}"
+                                     Text="{Binding Settings.MustTcpRules}"
+                                     VerticalScrollBarVisibility="Auto" />
+                            <Border Style="{StaticResource SettingsSectionDividerStyle}" />
+                            <Button Margin="0,12,0,0"
+                                    HorizontalAlignment="Left"
+                                    Style="{StaticResource SettingsPrimaryActionButtonStyle}"
+                                    Click="ApplyMustTcp_Click"
+                                    Content="保存规则" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="ProxySectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="上游代理设置" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="配置代理地址，并通过规则控制命中流量。" />
+                            <TextBlock Margin="0,12,0,0" Style="{StaticResource FormLabelTextStyle}" Text="代理地址" />
+                            <TextBox Margin="0,6,0,0" Style="{StaticResource SettingsCompactTextBoxStyle}" Text="{Binding Settings.GlobalProxy}" />
+                            <TextBlock Margin="0,12,0,0" Style="{StaticResource FormLabelTextStyle}" Text="代理规则" />
+                            <TextBox Height="210"
+                                     Margin="0,6,0,0"
+                                     AcceptsReturn="True"
+                                     Style="{StaticResource SettingsEditorTextBoxStyle}"
+                                     Text="{Binding Settings.GlobalProxyRules}"
+                                     VerticalScrollBarVisibility="Auto" />
+                            <Border Style="{StaticResource SettingsSectionDividerStyle}" />
+                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="EnableProxy_Click" Content="启用代理" />
+                                <Button Style="{StaticResource SettingsSmallActionButtonStyle}" Click="DisableProxy_Click" Content="关闭代理" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel x:Name="HostsSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="HOSTS 规则" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="优先级高于替换规则。源地址支持通配形式，保存后即时生效。" />
+                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="AddHosts_Click" Content="新增规则" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="RemoveHosts_Click" Content="删除所选" />
+                                <Button Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="ApplyHosts_Click" Content="保存规则" />
+                            </StackPanel>
+                            <DataGrid x:Name="HostsRulesGrid"
+                                      Height="288"
+                                      ItemsSource="{Binding HostsRuleItems}"
+                                      Style="{StaticResource SettingsDataGridStyle}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="源地址" Binding="{Binding Source, UpdateSourceTrigger=PropertyChanged}" Width="2.2*" />
+                                    <DataGridTextColumn Header="新地址" Binding="{Binding Target, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
+                                    <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="108" IsReadOnly="True" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+
+                        <StackPanel x:Name="ReplaceSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="替换规则" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="按类型维护输入与输出内容；响应文件类型可直接选择本地文件作为输出。" />
+                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="AddReplace_Click" Content="新增规则" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="RemoveReplace_Click" Content="删除所选" />
+                                <Button Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="ApplyReplace_Click" Content="保存规则" />
+                            </StackPanel>
+                            <DataGrid x:Name="ReplaceRulesGrid"
+                                      Height="288"
+                                      ItemsSource="{Binding ReplaceRuleItems}"
+                                      Style="{StaticResource SettingsDataGridStyle}">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="替换类型" Width="138">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{StaticResource ReplaceRuleTypeItems}"
+                                                          SelectedItem="{Binding RuleType, UpdateSourceTrigger=PropertyChanged}"
+                                                          Style="{StaticResource SettingsCompactComboBoxStyle}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="匹配输入" Binding="{Binding SourceContent, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
+                                    <DataGridTemplateColumn Header="输出内容" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox Text="{Binding ReplacementContent, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource SettingsCompactTextBoxStyle}" />
+                                                    <Button Grid.Column="1"
+                                                            Margin="6,0,0,0"
+                                                            Padding="10,4"
+                                                            Click="BrowseReplaceFile_Click"
+                                                            Content="选择文件">
+                                                        <Button.Style>
+                                                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource SettingsSmallActionButtonStyle}">
+                                                                <Setter Property="MinWidth" Value="74" />
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding UsesResponseFile}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="108" IsReadOnly="True" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+
+                        <StackPanel x:Name="ScriptSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="脚本编辑" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="保存时会自动格式化并校验脚本，适合直接维护 Go 核心脚本。" />
+                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="RestoreDefaultScript_Click" Content="恢复默认" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="FormatScript_Click" Content="格式化" />
+                                <Button Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="ApplyScript_Click" Content="保存脚本" />
+                            </StackPanel>
+                            <TextBox Height="372"
+                                     Margin="0,12,0,0"
+                                     AcceptsReturn="True"
+                                     FontFamily="Consolas, Microsoft YaHei UI"
+                                     HorizontalScrollBarVisibility="Auto"
+                                     Style="{StaticResource SettingsEditorTextBoxStyle}"
+                                     Text="{Binding Settings.ScriptCode}"
+                                     TextWrapping="NoWrap"
+                                     VerticalScrollBarVisibility="Auto" />
+                        </StackPanel>
+
+                        <Grid x:Name="ProcessSectionPanel"
+                              Margin="0,10,0,0"
+                              Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="8" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Style="{StaticResource ProcessToolbarBorderStyle}">
+                                <DockPanel LastChildFill="True">
+                                    <StackPanel DockPanel.Dock="Right"
+                                                Orientation="Horizontal">
+                                        <Button Style="{StaticResource ProcessMiniButtonStyle}"
+                                                Click="RefreshProcesses_Click"
+                                                Content="刷新进程" />
+                                        <Button Margin="8,0,0,0"
+                                                Style="{StaticResource ProcessPrimaryMiniButtonStyle}"
+                                                Click="LoadProcessDriver_Click"
+                                                Content="加载驱动" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="8"
+                                                 Height="8"
+                                                 Margin="0,0,6,0"
+                                                 VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="{x:Type Ellipse}">
+                                                    <Setter Property="Fill" Value="#C6D0DE" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ProcessDriverLoaded}" Value="True">
+                                                            <Setter Property="Fill" Value="#28A35B" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Style="{StaticResource SettingsStateTextStyle}"
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding ProcessDriverStatusText}" />
+                                        <Border Style="{StaticResource ProcessToolbarSeparatorStyle}" />
+                                        <CheckBox Style="{StaticResource ProcessToolbarCheckBoxStyle}"
+                                                  Click="CaptureAllProcesses_Click"
+                                                  Content="捕获所有进程"
+                                                  IsChecked="{Binding CaptureAllProcesses}" />
+                                        <Border Style="{StaticResource ProcessToolbarSeparatorStyle}" />
+                                        <TextBlock Style="{StaticResource ProcessToolbarTextStyle}"
+                                                   Text="{Binding CurrentPidCaptureText}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+
+                            <Border Grid.Row="2"
+                                    Height="392"
+                                    Padding="10"
+                                    Style="{StaticResource ProcessWorkspaceBorderStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="1.1*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0"
+                                            Style="{StaticResource ProcessWorkspacePanelBorderStyle}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <Border Style="{StaticResource ProcessPaneHeaderBorderStyle}">
+                                                <DockPanel LastChildFill="True">
+                                                    <TextBlock Style="{StaticResource ProcessPanelTitleTextStyle}"
+                                                               Text="按进程名捕获" />
+                                                    <Button DockPanel.Dock="Right"
+                                                            Style="{StaticResource ProcessMiniButtonStyle}"
+                                                            Click="AddLdPreset_Click"
+                                                            Content="雷电预设" />
+                                                </DockPanel>
+                                            </Border>
+
+                                            <Border Grid.Row="1"
+                                                    Style="{StaticResource ProcessPaneActionBorderStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Background="#F8FAFD"
+                                                            BorderBrush="#DCE5F1"
+                                                            BorderThickness="1"
+                                                            CornerRadius="4">
+                                                        <TextBox x:Name="ProcessNameInputTextBox"
+                                                             Style="{StaticResource ProcessGridInputTextBoxStyle}"
+                                                             KeyDown="ProcessNameInput_KeyDown"
+                                                                 Text="{Binding NewProcessName, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </Border>
+                                                    <Button Grid.Column="1"
+                                                            Margin="8,0,0,0"
+                                                            Style="{StaticResource ProcessMiniButtonStyle}"
+                                                            Click="AddProcessName_Click"
+                                                            Content="添加" />
+                                                    <Button Grid.Column="2"
+                                                            Margin="8,0,0,0"
+                                                            Style="{StaticResource ProcessMiniButtonStyle}"
+                                                            Click="RemoveProcessName_Click"
+                                                            Content="移除所选" />
+                                                </Grid>
+                                            </Border>
+
+                                            <DataGrid x:Name="ProcessNamesGrid"
+                                                      Grid.Row="2"
+                                                      ItemsSource="{Binding ProcessCaptureNames}"
+                                                      SelectedItem="{Binding SelectedProcessCaptureName, Mode=TwoWay}"
+                                                      SelectionMode="Single"
+                                                      PreviewMouseRightButtonDown="ProcessGrid_PreviewMouseRightButtonDown"
+                                                      Style="{StaticResource ProcessDataGridStyle}">
+                                                <DataGrid.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="复制进程名" Click="CopySelectedProcessName_Click" />
+                                                    </ContextMenu>
+                                                </DataGrid.ContextMenu>
+                                                <DataGrid.Columns>
+                                                    <DataGridTemplateColumn Header="捕获"
+                                                                            Width="58"
+                                                                            IsReadOnly="False">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <CheckBox IsChecked="{Binding IsCaptured}"
+                                                                          Style="{StaticResource ProcessGridCheckBoxStyle}"
+                                                                          Click="ProcessNameCaptureCheckBox_Click" />
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTextColumn Header="进程名"
+                                                                        Binding="{Binding Name}"
+                                                                        ElementStyle="{StaticResource ProcessGridTextStyle}"
+                                                                        Width="*"
+                                                                        IsReadOnly="True" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Grid.Column="2"
+                                            Style="{StaticResource ProcessWorkspacePanelBorderStyle}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <Border Style="{StaticResource ProcessPaneHeaderBorderStyle}">
+                                                <TextBlock Style="{StaticResource ProcessPanelTitleTextStyle}"
+                                                           Text="按PID捕获" />
+                                            </Border>
+
+                                            <Border Grid.Row="1"
+                                                    Style="{StaticResource ProcessPaneActionBorderStyle}">
+                                                <DockPanel LastChildFill="True">
+                                                    <StackPanel DockPanel.Dock="Right"
+                                                                Orientation="Horizontal">
+                                                        <Button Margin="0,0,8,0"
+                                                                Style="{StaticResource ProcessPrimaryMiniButtonStyle}"
+                                                                Click="SetProcessPid_Click"
+                                                                Content="添加所选" />
+                                                        <Button Style="{StaticResource ProcessMiniButtonStyle}"
+                                                                Click="ClearProcessPid_Click"
+                                                                Content="移除所选" />
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Margin="0,0,6,0"
+                                                                   VerticalAlignment="Center"
+                                                                   Style="{StaticResource ProcessCaptionTextStyle}"
+                                                                   Text="搜索" />
+                                                        <Border Width="178"
+                                                                Background="#F8FAFD"
+                                                                BorderBrush="#DCE5F1"
+                                                                BorderThickness="1"
+                                                                CornerRadius="4">
+                                                            <TextBox Style="{StaticResource ProcessGridInputTextBoxStyle}"
+                                                                     ToolTip="输入 PID 或进程名快速筛选"
+                                                                     Text="{Binding ProcessSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </Border>
+                                                        <TextBlock Margin="10,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   Style="{StaticResource ProcessCaptionTextStyle}"
+                                                                   Text="{Binding ProcessSearchSummaryText}" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+
+                                            <DataGrid x:Name="RunningProcessesGrid"
+                                                      Grid.Row="2"
+                                                      ItemsSource="{Binding RunningProcessesView}"
+                                                      SelectedItem="{Binding SelectedRunningProcess, Mode=TwoWay}"
+                                                      SelectionMode="Extended"
+                                                      PreviewMouseRightButtonDown="ProcessGrid_PreviewMouseRightButtonDown"
+                                                      Style="{StaticResource ProcessDataGridStyle}">
+                                                <DataGrid.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="复制进程名" Click="CopySelectedProcessName_Click" />
+                                                    </ContextMenu>
+                                                </DataGrid.ContextMenu>
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="PID"
+                                                                        Binding="{Binding Pid}"
+                                                                        ElementStyle="{StaticResource ProcessGridTextStyle}"
+                                                                        Width="78"
+                                                                        IsReadOnly="True" />
+                                                    <DataGridTextColumn Header="进程名"
+                                                                        Binding="{Binding Name}"
+                                                                        ElementStyle="{StaticResource ProcessGridTextStyle}"
+                                                                        Width="*"
+                                                                        IsReadOnly="True" />
+                                                    <DataGridTemplateColumn Header="捕获"
+                                                                            Width="72"
+                                                                            IsReadOnly="False">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <CheckBox IsChecked="{Binding IsCaptured}"
+                                                                          Style="{StaticResource ProcessGridCheckBoxStyle}"
+                                                                          Click="RunningProcessCaptureCheckBox_Click" />
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <StackPanel x:Name="RequestCertSectionPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="请求证书" />
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="按规则加载请求证书，支持读取证书主机名并即时应用。" />
+                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="AddRequestCert_Click" Content="新增规则" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="RemoveRequestCert_Click" Content="删除所选" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="ResolveRequestCertHost_Click" Content="读取主机名" />
+                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsSmallActionButtonStyle}" Click="BrowseRequestCert_Click" Content="选择证书" />
+                                <Button Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="LoadRequestCert_Click" Content="载入证书" />
+                            </StackPanel>
+                            <DataGrid x:Name="RequestCertGrid"
+                                      Height="300"
+                                      ItemsSource="{Binding RequestCertificateItems}"
+                                      Style="{StaticResource SettingsDataGridStyle}">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="使用规则" Width="136">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{StaticResource RequestCertificateRuleItems}" SelectedItem="{Binding UsageRule, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsCompactComboBoxStyle}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="主机名" Binding="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Width="1.2*" />
+                                    <DataGridTextColumn Header="证书文件" Binding="{Binding CertificateFile, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
+                                    <DataGridTextColumn Header="密码" Binding="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Width="132" />
+                                    <DataGridTextColumn Header="载入状态" Binding="{Binding LoadState}" Width="108" IsReadOnly="True" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

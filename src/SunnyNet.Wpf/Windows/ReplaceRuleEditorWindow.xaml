@@ -1,0 +1,146 @@
+<Window x:Class="SunnyNet.Wpf.Windows.ReplaceRuleEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="替换规则设置"
+        Width="860"
+        Height="560"
+        MinWidth="720"
+        MinHeight="480"
+        Background="#FFFFFF"
+        WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
+    </Window.Resources>
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel LastChildFill="True">
+            <RadioButton x:Name="AllRequestsRadio"
+                         VerticalAlignment="Center"
+                         GroupName="MatchMode"
+                         Content="所有请求"
+                         Checked="MatchMode_Changed" />
+            <ComboBox x:Name="DataKindComboBox"
+                      DockPanel.Dock="Right"
+                      Width="220"
+                      Height="28"
+                      VerticalAlignment="Center"
+                      ToolTip="需替换数据类型" />
+            <TextBlock DockPanel.Dock="Right"
+                       Margin="0,0,8,0"
+                       VerticalAlignment="Center"
+                       Text="需替换数据类型：" />
+        </DockPanel>
+
+        <DockPanel Grid.Row="1" Margin="0,12,0,0" LastChildFill="True">
+            <RadioButton x:Name="UrlHostRadio"
+                         VerticalAlignment="Center"
+                         GroupName="MatchMode"
+                         Content="对 URL 或 HOST 执行替换："
+                         IsChecked="True"
+                         Checked="MatchMode_Changed" />
+            <TextBox x:Name="MatchTargetTextBox"
+                     Height="28"
+                     Margin="8,0,0,0"
+                     VerticalContentAlignment="Center" />
+        </DockPanel>
+
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <DockPanel LastChildFill="False">
+                <RadioButton x:Name="ReplacePartRadio"
+                             GroupName="ReplaceMode"
+                             Content="替换原文部分内容"
+                             IsChecked="True" />
+                <RadioButton x:Name="ReplaceAllRadio"
+                             Margin="16,0,0,0"
+                             GroupName="ReplaceMode"
+                             Content="直接替换所有内容" />
+                <CheckBox x:Name="UseHexCheckBox"
+                          DockPanel.Dock="Right"
+                          Content="使用 HEX 编码解析" />
+            </DockPanel>
+            <TextBox x:Name="SourceTextBox"
+                     Grid.Row="1"
+                     Margin="0,8,0,0"
+                     Padding="6,4"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto" />
+        </Grid>
+
+        <DockPanel Grid.Row="3" Margin="0,14,0,0" LastChildFill="False">
+            <RadioButton x:Name="DirectDataRadio"
+                         GroupName="DataMode"
+                         Content="直接替换数据"
+                         IsChecked="True"
+                         Checked="ReplacementMode_Changed" />
+            <RadioButton x:Name="FileDataRadio"
+                         Margin="16,0,0,0"
+                         GroupName="DataMode"
+                         Content="从文件读数据"
+                         Checked="ReplacementMode_Changed" />
+        </DockPanel>
+
+        <Grid Grid.Row="4" Margin="0,8,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <DockPanel LastChildFill="True">
+                <TextBlock VerticalAlignment="Center" Text="用作替换的内容：" />
+                <CheckBox x:Name="FileHexCheckBox"
+                          DockPanel.Dock="Right"
+                          Content="使用 HEX 解码解析" />
+                <Button x:Name="BrowseFileButton"
+                        DockPanel.Dock="Right"
+                        Width="36"
+                        Height="28"
+                        Margin="8,0"
+                        Click="BrowseFile_Click"
+                        Content="..." />
+                <TextBox x:Name="FilePathTextBox"
+                         Height="28"
+                         Margin="12,0,0,0"
+                         VerticalContentAlignment="Center" />
+            </DockPanel>
+            <TextBox x:Name="ReplacementTextBox"
+                     Grid.Row="1"
+                     Margin="0,8,0,0"
+                     Padding="6,4"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto" />
+        </Grid>
+
+        <StackPanel Grid.Row="5"
+                    Margin="0,14,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+            <Button Width="88"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Click="Accept_Click"
+                    Content="添加规则"
+                    IsDefault="True" />
+            <Button Width="88"
+                    Height="30"
+                    Click="Cancel_Click"
+                    Content="关闭窗口"
+                    IsCancel="True" />
+        </StackPanel>
+    </Grid>
+</Window>

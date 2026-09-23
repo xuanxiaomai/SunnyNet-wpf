@@ -1,0 +1,81 @@
+<Window x:Class="SunnyNet.Wpf.Windows.InterceptRuleEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="拦截规则设置"
+        Width="560"
+        Height="280"
+        MinWidth="480"
+        MinHeight="240"
+        Background="#FFFFFF"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="88" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock VerticalAlignment="Center" Text="包含" />
+        <ComboBox x:Name="ContainsComboBox"
+                  Grid.Column="1"
+                  Height="28"
+                  SelectedIndex="0" />
+
+        <TextBlock Grid.Row="1"
+                   Margin="0,12,0,0"
+                   VerticalAlignment="Center"
+                   Text="拦截目标" />
+        <TextBox x:Name="TargetTextBox"
+                 Grid.Row="1"
+                 Grid.Column="1"
+                 Height="28"
+                 Margin="0,12,0,0"
+                 VerticalContentAlignment="Center" />
+
+        <TextBlock Grid.Row="2"
+                   Margin="0,12,0,0"
+                   VerticalAlignment="Center"
+                   Text="拦截类型" />
+        <ComboBox x:Name="InterceptTypeComboBox"
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Height="28"
+                  Margin="0,12,0,0" />
+
+        <TextBlock Grid.Row="3"
+                   Margin="0,12,0,0"
+                   VerticalAlignment="Center"
+                   Text="挂起进程" />
+        <CheckBox x:Name="SuspendCheckBox"
+                  Grid.Row="3"
+                  Grid.Column="1"
+                  Margin="0,12,0,0"
+                  VerticalAlignment="Center"
+                  Content="命中后挂起（请求断点）" />
+
+        <StackPanel Grid.Row="5"
+                    Grid.ColumnSpan="2"
+                    Margin="0,18,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+            <Button Width="88"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Click="Accept_Click"
+                    Content="添加规则"
+                    IsDefault="True" />
+            <Button Width="88"
+                    Height="30"
+                    Click="Cancel_Click"
+                    Content="关闭窗口"
+                    IsCancel="True" />
+        </StackPanel>
+    </Grid>
+</Window>

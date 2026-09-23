@@ -1,0 +1,2102 @@
+<Window x:Class="SunnyNet.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:SunnyNet.Wpf.Controls"
+        xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="SunnyNet"
+        Icon="Resources/AppIcon.ico"
+        Width="1460"
+        Height="820"
+        MinWidth="980"
+        MinHeight="620"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        PreviewKeyDown="MainWindow_PreviewKeyDown">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="8" CornerRadius="0" GlassFrameThickness="0" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="DetailSectionTitleTextStyle" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource SectionTitleTextStyle}">
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <Style x:Key="DetailHeaderIconButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource HeaderIconButtonStyle}">
+            <Setter Property="MinWidth" Value="28" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Padding" Value="6,4" />
+        </Style>
+
+        <Style x:Key="DetailBadgeBorderStyle" TargetType="{x:Type Border}" BasedOn="{StaticResource BadgeBorderStyle}">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="CornerRadius" Value="7" />
+        </Style>
+
+        <Style x:Key="DetailBreakpointButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BreakpointButtonStyle}">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="DetailBreakpointWarningButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource DetailBreakpointButtonStyle}">
+            <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+            <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+            <Setter Property="BorderBrush" Value="#F3D7A6" />
+        </Style>
+
+        <Style x:Key="DetailBreakpointSuccessButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource DetailBreakpointButtonStyle}">
+            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+            <Setter Property="BorderBrush" Value="#BDE2CB" />
+        </Style>
+
+        <Style x:Key="DetailBreakpointDangerButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource DetailBreakpointButtonStyle}">
+            <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+            <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+            <Setter Property="BorderBrush" Value="#F4C3C6" />
+        </Style>
+
+        <Style x:Key="DetailTabItemStyle" TargetType="{x:Type TabItem}" BasedOn="{StaticResource {x:Type TabItem}}">
+            <Setter Property="Padding" Value="11,5" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+
+        <Style x:Key="DetailSearchLabelTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        </Style>
+
+        <Style x:Key="DetailSearchTextBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Width" Value="154" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DCE5F1" />
+            <Setter Property="ToolTip" Value="输入关键词高亮匹配，Enter 查找下一个" />
+        </Style>
+
+        <Style x:Key="WorkspaceTabControlStyle" TargetType="{x:Type TabControl}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabControl}">
+                        <DockPanel LastChildFill="True">
+                            <Border DockPanel.Dock="Top"
+                                    Background="{StaticResource SurfaceBrush}"
+                                    BorderBrush="{StaticResource DividerBrush}"
+                                    BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal"
+                                            IsItemsHost="True"
+                                            KeyboardNavigation.TabIndex="1" />
+                            </Border>
+                            <ContentPresenter x:Name="PART_SelectedContentHost"
+                                              Margin="0,8,0,0"
+                                              ContentSource="SelectedContent" />
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="WorkspaceTabItemStyle" TargetType="{x:Type TabItem}">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Border x:Name="TabBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent"
+                                BorderThickness="0,0,0,2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ContentSource="Header"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                <Setter TargetName="TabBorder" Property="Background" Value="#F5F8FC" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="TabBorder" Property="Background" Value="Transparent" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="0"
+            Background="{StaticResource WindowBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="56" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="42" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Background="Transparent"
+                    BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid Margin="16,0,12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="LanIpIconBorder"
+                                Width="30"
+                                Height="30"
+                                CornerRadius="6"
+                                Background="{StaticResource AccentSoftBrush}"
+                                Cursor="Hand"
+                                MouseEnter="LanIpIconBorder_MouseEnter"
+                                MouseLeftButtonDown="LanIpIconBorder_MouseLeftButtonDown">
+                            <TextBlock HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       Text="&#xE774;" />
+                        </Border>
+                        <primitives:Popup x:Name="LanIpPopup"
+                               AllowsTransparency="True"
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=LanIpIconBorder}"
+                               PopupAnimation="Fade"
+                               StaysOpen="False">
+                            <Border Width="198"
+                                    Padding="20,18"
+                                    Background="White"
+                                    BorderBrush="#DDE7F2"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="24" Direction="270" Opacity="0.16" ShadowDepth="8" Color="#1F2D3D" />
+                                </Border.Effect>
+                                <StackPanel>
+                                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#7A8CA6" Text="当前内网IP" />
+                                    <Border Height="1" Margin="0,10,0,6" Background="#DDE7F2" />
+                                    <ItemsControl x:Name="LanIpItemsControl">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Padding="0"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Click="LanIpCopyButton_Click"
+                                                        CommandParameter="{Binding}">
+                                                    <Border Padding="0,8" BorderBrush="#E4ECF5" BorderThickness="0,0,0,1">
+                                                        <TextBlock Foreground="#315F9F" FontSize="14" Text="{Binding}" />
+                                                    </Border>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </primitives:Popup>
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock FontSize="15" FontWeight="SemiBold" Text="SunnyNet" />
+                            <TextBlock Style="{StaticResource CaptionTextStyle}" Text="Windows Capture Studio" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                MouseLeftButtonDown="WindowControls_MouseLeftButtonDown">
+                        <Button Style="{StaticResource TitleBarButtonStyle}" Click="Minimize_Click" ToolTip="最小化">
+                            <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE949;" />
+                        </Button>
+                        <Button Style="{StaticResource TitleBarButtonStyle}" Click="Maximize_Click" ToolTip="最大化/还原">
+                            <TextBlock x:Name="MaximizeGlyph" Style="{StaticResource GlyphTextStyle}" Text="&#xE739;" />
+                        </Button>
+                        <Button Style="{StaticResource TitleBarCloseButtonStyle}" Click="Close_Click" ToolTip="关闭">
+                            <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE8BB;" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1"
+                    Margin="6,6,6,6"
+                    Style="{StaticResource CardBorderStyle}">
+                <DockPanel Margin="8,4" LastChildFill="True">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  VerticalAlignment="Center"
+                                  Focusable="False">
+                        <StackPanel Orientation="Horizontal">
+                            <Menu VerticalAlignment="Center">
+                                <MenuItem Header="文件">
+                                    <MenuItem Header="打开文件" Click="OpenFile_Click" />
+                                    <MenuItem Header="保存选中的文件" Click="SaveSelected_Click" />
+                                    <MenuItem Header="保存全部" Click="SaveAll_Click" />
+                                </MenuItem>
+                            </Menu>
+
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="Settings_Click" ToolTip="程序设置">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE713;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="设置" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="Find_Click" ToolTip="搜索/查找 (Ctrl+F)">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE721;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="查找" />
+                                </StackPanel>
+                            </Button>
+                            <Menu Margin="6,0,0,0" VerticalAlignment="Center">
+                                <MenuItem x:Name="ClearSessionsMenuItem"
+                                          Padding="10,6"
+                                          ToolTip="按类型清除会话列表">
+                                    <MenuItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE74D;" />
+                                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="清除" />
+                                            <TextBlock Margin="4,1,0,0"
+                                                       VerticalAlignment="Center"
+                                                       FontFamily="Segoe UI Symbol"
+                                                       FontSize="9"
+                                                       Text="▼" />
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                    <MenuItem Header="清除所有" InputGestureText="Ctrl+X" Tag="All" Click="ClearSessionsByRule_Click" />
+                                    <MenuItem Header="清除资源" Tag="Resources" Click="ClearSessionsByRule_Click" />
+                                    <MenuItem Header="清除无响应" Tag="NoResponse" Click="ClearSessionsByRule_Click" />
+                                    <MenuItem Header="清除失败请求" Tag="Failed" Click="ClearSessionsByRule_Click" />
+                                    <MenuItem Header="清除重定向" Tag="Redirect" Click="ClearSessionsByRule_Click" />
+                                    <Separator />
+                                    <MenuItem Header="清除未收藏" Tag="Unfavorite" Click="ClearSessionsByRule_Click" />
+                                    <MenuItem Header="清除未标记" Tag="Untagged" Click="ClearSessionsByRule_Click" />
+                                    <MenuItem Header="清除当前筛选结果" Tag="CurrentFilter" Click="ClearSessionsByRule_Click" />
+                                    <Separator />
+                                    <MenuItem Header="清除过滤条件" Click="ClearFilters_Click" />
+                                </MenuItem>
+                            </Menu>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Command="{Binding ReleaseAllCommand}" ToolTip="全部放行">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE768;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="全部放行" />
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Margin="10,6" Background="{StaticResource DividerBrush}" />
+
+                            <ToggleButton x:Name="AutoScrollToolbarButton"
+                                          Margin="6,0,0,0"
+                                          Style="{StaticResource ToolbarToggleButtonStyle}"
+                                          IsChecked="{Binding AutoScroll, Mode=TwoWay}"
+                                          Click="AutoScrollToolbarButton_Click"
+                                          ToolTip="列表自动跟随显示">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE73E;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="自动滚动显示" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <Border Width="1" Margin="10,6" Background="{StaticResource DividerBrush}" />
+
+                            <Button Style="{StaticResource ToolbarButtonStyle}" Click="TextCompare_Click" ToolTip="文本工具">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE8D2;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="文本工具" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="JsonTool_Click" ToolTip="JSON工具">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE8A5;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="JSON" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="CryptoTool_Click" ToolTip="加密/解密">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE72E;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="加密/解密" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="RequestBuilder_Click" ToolTip="请求构造器">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE8F1;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="请求构造器" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="SessionCompare_Click" ToolTip="会话比较">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE8AB;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="比较" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="CertificateGuide_Click" ToolTip="证书安装教程">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE7C3;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="证书教程" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="OpenSource_Click" ToolTip="开源协议">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE82D;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="开源协议" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <Grid x:Name="WorkspaceGrid" Grid.Row="2" Margin="12,0,12,12" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="WorkspaceSessionColumn" Width="2*" MinWidth="420" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition x:Name="WorkspaceDetailColumn" Width="3*" MinWidth="520" />
+                </Grid.ColumnDefinitions>
+
+                <Border x:Name="SessionListPanel" Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                    <Border.Resources>
+                        <Style x:Key="FavoritesOnlyToggleStyle" TargetType="{x:Type ToggleButton}">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="6,3,8,3" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <Border x:Name="Root"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}"
+                                                CornerRadius="3">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Root" Property="Background" Value="#F5F8FC" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Root" Property="Background" Value="#C4E8D3" />
+                                                <Setter TargetName="Root" Property="BorderBrush" Value="#198754" />
+                                                <Setter TargetName="Root" Property="BorderThickness" Value="3,0,0,0" />
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsChecked" Value="True" />
+                                                    <Condition Property="IsMouseOver" Value="True" />
+                                                </MultiTrigger.Conditions>
+                                                <Setter TargetName="Root" Property="Background" Value="#B0DEC4" />
+                                                <Setter TargetName="Root" Property="BorderBrush" Value="#198754" />
+                                                <Setter TargetName="Root" Property="BorderThickness" Value="3,0,0,0" />
+                                            </MultiTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="FavoritesOnlyTextStyle" TargetType="{x:Type TextBlock}">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Setter Property="FontSize" Value="12" />
+                            <Setter Property="Foreground" Value="#6F7F93" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowFavoritesOnly}" Value="True">
+                                    <Setter Property="Foreground" Value="#143A28" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style x:Key="FavoritesOnlyStarStyle" TargetType="{x:Type TextBlock}">
+                            <Setter Property="FontSize" Value="13" />
+                            <Setter Property="Foreground" Value="#D8A900" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowFavoritesOnly}" Value="True">
+                                    <Setter Property="Foreground" Value="#0F6B3C" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style x:Key="StructureLinkButtonStyle" TargetType="{x:Type Button}">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="2,0" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Foreground" Value="#2AA96B" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="StructureExpanderStyle" TargetType="{x:Type Expander}">
+                            <Setter Property="Margin" Value="0,0,0,6" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Expander}">
+                                        <StackPanel>
+                                            <ToggleButton x:Name="HeaderSite"
+                                                          Background="Transparent"
+                                                          BorderBrush="Transparent"
+                                                          BorderThickness="0"
+                                                          Focusable="False"
+                                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                          Padding="0,1,0,3">
+                                                <DockPanel LastChildFill="False">
+                                                    <TextBlock x:Name="Chevron"
+                                                               VerticalAlignment="Center"
+                                                               FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="11"
+                                                               Foreground="#2D3C50"
+                                                               Text="&#xE70D;" />
+                                                    <ContentPresenter Margin="6,0,0,0"
+                                                                      VerticalAlignment="Center"
+                                                                      RecognizesAccessKey="True"
+                                                                      ContentSource="Header"
+                                                                      TextElement.Foreground="#24364A"
+                                                                      TextElement.FontSize="13"
+                                                                      TextElement.FontWeight="SemiBold" />
+                                                </DockPanel>
+                                            </ToggleButton>
+                                            <ContentPresenter x:Name="ExpandSite"
+                                                              Margin="14,0,0,1"
+                                                              Visibility="Collapsed"
+                                                              Focusable="False" />
+                                        </StackPanel>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger SourceName="HeaderSite" Property="IsChecked" Value="True">
+                                                <Setter TargetName="Chevron" Property="Text" Value="&#xE70E;" />
+                                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="StructureFilterIconStyle" TargetType="{x:Type TextBlock}">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+                            <Setter Property="FontSize" Value="11" />
+                            <Setter Property="Foreground" Value="#8AA9C8" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter Property="Foreground" Value="#0F6B3C" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style x:Key="StructureFilterTextStyle" TargetType="{x:Type TextBlock}">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Setter Property="FontSize" Value="11" />
+                            <Setter Property="Foreground" Value="#6F7F93" />
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter Property="Foreground" Value="#143A28" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style x:Key="StructureListBoxItemStyle" TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                        <Border x:Name="ItemBorder"
+                                                Margin="0,0,0,1"
+                                                Padding="6,3,4,3"
+                                                Background="Transparent"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="0"
+                                                CornerRadius="3">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#F5F8FC" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#C4E8D3" />
+                                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#198754" />
+                                                <Setter TargetName="ItemBorder" Property="BorderThickness" Value="3,0,0,0" />
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsSelected" Value="True" />
+                                                    <Condition Property="IsMouseOver" Value="True" />
+                                                </MultiTrigger.Conditions>
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#B0DEC4" />
+                                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#198754" />
+                                                <Setter TargetName="ItemBorder" Property="BorderThickness" Value="3,0,0,0" />
+                                            </MultiTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="StructureListBoxStyle" TargetType="{x:Type ListBox}">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource StructureListBoxItemStyle}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListBox}">
+                                        <Border Background="Transparent">
+                                            <ScrollViewer Focusable="False" CanContentScroll="True">
+                                                <ItemsPresenter />
+                                            </ScrollViewer>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <DataTemplate x:Key="ProcessFilterItemTemplate">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource StructureFilterIconStyle}" Text="&#xE7F8;" />
+                                <TextBlock Grid.Column="1"
+                                           Style="{StaticResource StructureFilterTextStyle}"
+                                           Text="{Binding Name}" />
+                            </Grid>
+                        </DataTemplate>
+                        <DataTemplate x:Key="DomainFilterItemTemplate">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource StructureFilterIconStyle}" Text="&#xE774;" />
+                                <TextBlock Grid.Column="1"
+                                           Style="{StaticResource StructureFilterTextStyle}"
+                                           Text="{Binding Name}" />
+                            </Grid>
+                        </DataTemplate>
+                        <DataTemplate x:Key="MethodFilterItemTemplate">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource StructureFilterIconStyle}" Text="&#xE8EF;" />
+                                <TextBlock Grid.Column="1"
+                                           Style="{StaticResource StructureFilterTextStyle}"
+                                           Text="{Binding Name}" />
+                            </Grid>
+                        </DataTemplate>
+                        <DataTemplate x:Key="SearchResultFilterItemTemplate">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource StructureFilterIconStyle}" Text="&#xE721;" />
+                                <TextBlock Grid.Column="1"
+                                           Style="{StaticResource StructureFilterTextStyle}"
+                                           Text="{Binding Name}" />
+                            </Grid>
+                        </DataTemplate>
+                        <Style x:Key="FavoriteCellButtonStyle" TargetType="{x:Type Button}">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Width" Value="22" />
+                            <Setter Property="Height" Value="22" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border x:Name="FavoriteButtonBorder"
+                                                Width="{TemplateBinding Width}"
+                                                Height="{TemplateBinding Height}"
+                                                Background="Transparent"
+                                                CornerRadius="11">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="FavoriteButtonBorder" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="FavoriteButtonBorder" Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="SessionFavoriteHeaderStyle" TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="Padding" Value="0,5" />
+                        </Style>
+                    </Border.Resources>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="48" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Background="{StaticResource SurfaceBrush}"
+                                BorderBrush="{StaticResource DividerBrush}"
+                                BorderThickness="0,0,0,1"
+                                CornerRadius="8,8,0,0">
+                            <DockPanel Margin="16,0" LastChildFill="False">
+                                <StackPanel DockPanel.Dock="Right"
+                                            Margin="10,0,0,0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center">
+                                    <Border Margin="0,0,10,0"
+                                            Padding="2"
+                                            Background="{StaticResource SurfaceAltBrush}"
+                                            BorderBrush="{StaticResource DividerBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ToggleButton x:Name="RequestPanelButton"
+                                                          IsChecked="True"
+                                                          Style="{StaticResource SegmentedToggleButtonStyle}"
+                                                          Click="RequestPanelButton_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE70B;" />
+                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="详情" />
+                                                </StackPanel>
+                                            </ToggleButton>
+                                            <ToggleButton x:Name="ColumnPanelButton"
+                                                          Style="{StaticResource SegmentedToggleButtonStyle}"
+                                                          Click="ColumnPanelButton_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE14C;" />
+                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="列选择" />
+                                                </StackPanel>
+                                            </ToggleButton>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="会话列表" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="SessionFilterColumn" Width="190" MinWidth="164" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition x:Name="SessionTableColumn" Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    Background="{StaticResource SurfaceBrush}"
+                                    BorderBrush="{StaticResource DividerBrush}"
+                                    BorderThickness="0,0,1,0"
+                                    CornerRadius="0,0,0,8">
+                                <Grid Margin="12,12,10,10">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="8" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <DockPanel Grid.Row="0" Margin="0,0,0,6" LastChildFill="False">
+                                        <Button DockPanel.Dock="Right"
+                                                Style="{StaticResource StructureLinkButtonStyle}"
+                                                Click="ClearFilters_Click"
+                                                ToolTip="清空进程、域名、请求方法、搜索结果与搜索高亮">
+                                            <TextBlock FontSize="12" Text="清除过滤" />
+                                        </Button>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="结构视图" />
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <DockPanel Grid.Row="1" Margin="0,0,0,2" LastChildFill="False">
+                                        <ToggleButton DockPanel.Dock="Right"
+                                                      Style="{StaticResource FavoritesOnlyToggleStyle}"
+                                                      IsChecked="{Binding ShowFavoritesOnly, Mode=TwoWay}"
+                                                      Click="FavoritesOnlyToggleButton_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource FavoritesOnlyStarStyle}"
+                                                           Text="★" />
+                                                <TextBlock Margin="4,0,0,0"
+                                                           Style="{StaticResource FavoritesOnlyTextStyle}"
+                                                           Text="仅看收藏" />
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </DockPanel>
+
+                                    <ScrollViewer Grid.Row="3"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  Focusable="False">
+                                        <StackPanel>
+                                            <Expander Style="{StaticResource StructureExpanderStyle}" IsExpanded="True">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#24364A"
+                                                                   Text="搜索结果" />
+                                                        <TextBlock Margin="4,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   Foreground="#6DAA82"
+                                                                   Text="{Binding SearchResultCount, Mode=OneWay, StringFormat=({0})}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ListBox x:Name="SearchResultFilterListBox"
+                                                         Style="{StaticResource StructureListBoxStyle}"
+                                                         ItemTemplate="{StaticResource SearchResultFilterItemTemplate}"
+                                                         ItemsSource="{Binding SearchResultFilters}"
+                                                         SelectionMode="Multiple"
+                                                         SelectionChanged="SearchResultFilterListBox_SelectionChanged" />
+                                            </Expander>
+
+                                            <Expander Style="{StaticResource StructureExpanderStyle}" IsExpanded="True">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#24364A"
+                                                                   Text="请求方法" />
+                                                        <TextBlock Margin="4,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   Foreground="#6DAA82"
+                                                                   Text="{Binding MethodFilters.Count, Mode=OneWay, StringFormat=({0})}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ListBox x:Name="MethodFilterListBox"
+                                                         Style="{StaticResource StructureListBoxStyle}"
+                                                         ItemTemplate="{StaticResource MethodFilterItemTemplate}"
+                                                         ItemsSource="{Binding MethodFilters}"
+                                                         SelectionMode="Multiple"
+                                                         PreviewKeyDown="MethodFilterListBox_PreviewKeyDown"
+                                                         SelectionChanged="MethodFilterListBox_SelectionChanged" />
+                                            </Expander>
+
+                                            <Expander Style="{StaticResource StructureExpanderStyle}" IsExpanded="True">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#24364A"
+                                                                   Text="应用程序" />
+                                                        <TextBlock Margin="4,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   Foreground="#6DAA82"
+                                                                   Text="{Binding ProcessFilters.Count, Mode=OneWay, StringFormat=({0})}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ListBox x:Name="ProcessFilterListBox"
+                                                         Style="{StaticResource StructureListBoxStyle}"
+                                                         ItemTemplate="{StaticResource ProcessFilterItemTemplate}"
+                                                         ItemsSource="{Binding ProcessFilters}"
+                                                         SelectionMode="Multiple"
+                                                         PreviewKeyDown="ProcessFilterListBox_PreviewKeyDown"
+                                                         SelectionChanged="ProcessFilterListBox_SelectionChanged" />
+                                            </Expander>
+
+                                            <Expander Style="{StaticResource StructureExpanderStyle}" IsExpanded="True">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#24364A"
+                                                                   Text="域名" />
+                                                        <TextBlock Margin="4,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   Foreground="#6DAA82"
+                                                                   Text="{Binding DomainFilters.Count, Mode=OneWay, StringFormat=({0})}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <ListBox x:Name="DomainFilterListBox"
+                                                         Style="{StaticResource StructureListBoxStyle}"
+                                                         ItemTemplate="{StaticResource DomainFilterItemTemplate}"
+                                                         ItemsSource="{Binding DomainFilters}"
+                                                         SelectionMode="Multiple"
+                                                         PreviewKeyDown="DomainFilterListBox_PreviewKeyDown"
+                                                         SelectionChanged="DomainFilterListBox_SelectionChanged" />
+                                            </Expander>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+
+                            <GridSplitter Grid.Column="1"
+                                          x:Name="SessionFilterSplitter"
+                                          Width="8"
+                                          HorizontalAlignment="Stretch"
+                                          ResizeDirection="Columns"
+                                          ResizeBehavior="PreviousAndNext"
+                                          DragCompleted="LayoutSplitter_DragCompleted"
+                                          Background="Transparent" />
+
+                            <DataGrid x:Name="SessionsGrid"
+                                      Grid.Column="2"
+                                      Margin="0"
+                                      RowHeight="26"
+                                      ColumnHeaderHeight="30"
+                                      FontSize="12"
+                                      ItemsSource="{Binding SessionsView}"
+                                      SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
+                                      AutoGenerateColumns="False"
+                                      SelectionMode="Extended"
+                                      SelectionUnit="FullRow"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      EnableRowVirtualization="True"
+                                      EnableColumnVirtualization="True"
+                                      VirtualizingPanel.IsVirtualizing="True"
+                                      VirtualizingPanel.VirtualizationMode="Recycling"
+                                      ScrollViewer.CanContentScroll="True"
+                                      PreviewMouseLeftButtonDown="SessionsGrid_PreviewMouseLeftButtonDown"
+                                      PreviewMouseLeftButtonUp="SessionsGrid_PreviewMouseLeftButtonUp"
+                                      MouseMove="SessionsGrid_MouseMove"
+                                      PreviewMouseRightButtonDown="SessionsGrid_PreviewMouseRightButtonDown"
+                                      CellEditEnding="SessionsGrid_CellEditEnding">
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu x:Name="SessionsGridContextMenu"
+                                                 Padding="4"
+                                                 Background="{StaticResource SurfaceBrush}"
+                                                 BorderBrush="{StaticResource BorderBrush}"
+                                                 BorderThickness="1"
+                                                 FontSize="12"
+                                                 Opened="SessionsGridContextMenu_Opened">
+                                        <MenuItem x:Name="CopySelectedSessionsMenuItem" Header="复制">
+                                            <MenuItem Header="请求地址" Click="CopySelectedSessionUrls_Click" />
+                                            <MenuItem Header="HOST" Click="CopySelectedSessionHosts_Click" />
+                                            <MenuItem Header="会话摘要" Click="CopySelectedSessionSummary_Click" />
+                                        </MenuItem>
+                                        <MenuItem x:Name="GenerateCodeSessionsMenuItem" Header="复制请求代码">
+                                            <MenuItem Header="C#">
+                                                <MenuItem Header="HttpClient" Tag="C#|HttpClient" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="RestSharp" Tag="C#|RestSharp" Click="GenerateRequestCode_Click" />
+                                            </MenuItem>
+                                            <MenuItem Header="Java">
+                                                <MenuItem Header="HttpClient (Java 11+)" Tag="Java|HttpClient" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="OkHttp" Tag="Java|OkHttp" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="HttpURLConnection" Tag="Java|HttpURLConnection" Click="GenerateRequestCode_Click" />
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem Header="Go net/http" Tag="Go|net/http" Click="GenerateRequestCode_Click" />
+                                            <MenuItem Header="Python requests" Tag="Python|requests" Click="GenerateRequestCode_Click" />
+                                            <MenuItem Header="JavaScript fetch" Tag="JavaScript|fetch" Click="GenerateRequestCode_Click" />
+                                            <Separator />
+                                            <MenuItem Header="易语言">
+                                                <MenuItem Header="WinInet" Tag="E|WinInet" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="WinHttpW" Tag="E|WinHttpW" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="WinHttpR" Tag="E|WinHttpR" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="E2EE" Tag="E|e2ee" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="网页_访问" Tag="E|网页_访问" Click="GenerateRequestCode_Click" />
+                                                <MenuItem Header="网页_访问_对象" Tag="E|网页_访问_对象" Click="GenerateRequestCode_Click" />
+                                            </MenuItem>
+                                            <MenuItem Header="火山 WinHttpW" Tag="火山|WinHttpW" Click="GenerateRequestCode_Click" />
+                                        </MenuItem>
+                                        <MenuItem x:Name="FavoriteSelectedSessionsMenuItem" Header="标记收藏" Click="FavoriteSelectedSessions_Click" />
+                                        <MenuItem x:Name="MarkColorSelectedSessionsMenuItem" Header="标记颜色">
+                                            <MenuItem Header="删除线" InputGestureText="Minus" Tag="__strike__" Click="MarkSelectedSessions_Click" />
+                                            <Separator />
+                                            <MenuItem Header="红色" InputGestureText="Ctrl+1" Tag="#FF5252" Click="MarkSelectedSessions_Click">
+                                                <MenuItem.Icon>
+                                                    <Border Width="10" Height="10" CornerRadius="5" Background="#FF5252" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="蓝色" InputGestureText="Ctrl+2" Tag="#2F7CF6" Click="MarkSelectedSessions_Click">
+                                                <MenuItem.Icon>
+                                                    <Border Width="10" Height="10" CornerRadius="5" Background="#2F7CF6" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="金色" InputGestureText="Ctrl+3" Tag="#F4B400" Click="MarkSelectedSessions_Click">
+                                                <MenuItem.Icon>
+                                                    <Border Width="10" Height="10" CornerRadius="5" Background="#F4B400" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="绿色" InputGestureText="Ctrl+4" Tag="#22A06B" Click="MarkSelectedSessions_Click">
+                                                <MenuItem.Icon>
+                                                    <Border Width="10" Height="10" CornerRadius="5" Background="#22A06B" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="橙色" InputGestureText="Ctrl+5" Tag="#FF8A00" Click="MarkSelectedSessions_Click">
+                                                <MenuItem.Icon>
+                                                    <Border Width="10" Height="10" CornerRadius="5" Background="#FF8A00" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="紫色" InputGestureText="Ctrl+6" Tag="#8B5CF6" Click="MarkSelectedSessions_Click">
+                                                <MenuItem.Icon>
+                                                    <Border Width="10" Height="10" CornerRadius="5" Background="#8B5CF6" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem Header="取消标记" InputGestureText="Ctrl+0" Tag="" Click="MarkSelectedSessions_Click" />
+                                        </MenuItem>
+                                        <MenuItem x:Name="EditNotesSessionsMenuItem" Header="编辑备注..." Click="EditSelectedSessionNotes_Click" />
+                                        <MenuItem x:Name="CompareSelectedSessionsMenuItem" Header="比较">
+                                            <MenuItem Header="加入比较左侧" Tag="Left" Click="AddSessionToCompare_Click" />
+                                            <MenuItem Header="加入比较右侧" Tag="Right" Click="AddSessionToCompare_Click" />
+                                            <Separator />
+                                            <MenuItem Header="选中两条比较" Click="CompareTwoSelectedSessions_Click" />
+                                        </MenuItem>
+                                        <Separator />
+                                        <MenuItem x:Name="SelectSessionsMenuItem" Header="选择">
+                                            <MenuItem Header="全选" InputGestureText="Ctrl+A" Click="SelectAllSessions_Click" />
+                                            <MenuItem Header="反选" Click="InvertSelectedSessions_Click" />
+                                            <Separator />
+                                            <MenuItem x:Name="SelectParentRequestsMenuItem" Header="父请求" Click="SelectParentRequests_Click" />
+                                            <MenuItem x:Name="SelectChildRequestsMenuItem" Header="子请求" Click="SelectChildRequests_Click" />
+                                            <MenuItem x:Name="SelectSameValueMenuItem" Header="匹配值" Click="SelectSameValueSessions_Click" />
+                                        </MenuItem>
+                                        <Separator />
+                                        <MenuItem x:Name="FilterSelectedSessionsMenuItem" Header="过滤">
+                                            <MenuItem x:Name="FilterByProcessMenuItem" Header="按选中进程过滤" Click="FilterSelectedSessionsByProcess_Click" />
+                                            <MenuItem x:Name="FilterByDomainMenuItem" Header="按选中域名过滤" Click="FilterSelectedSessionsByDomain_Click" />
+                                            <MenuItem x:Name="FilterByMethodMenuItem" Header="按选中请求方法过滤" Click="FilterSelectedSessionsByMethod_Click" />
+                                            <Separator />
+                                            <MenuItem x:Name="ClearFiltersFromSessionsMenuItem" Header="清除过滤" Click="ClearFilters_Click" />
+                                        </MenuItem>
+                                        <MenuItem x:Name="FindFromSessionsMenuItem" Header="查找..." InputGestureText="Ctrl+F" Click="Find_Click" />
+                                        <Separator />
+                                        <MenuItem x:Name="InterceptSelectedSessionMenuItem" Header="拦截" Click="AddInterceptRuleFromSession_Click" />
+                                        <MenuItem x:Name="ReplaceSelectedSessionMenuItem" Header="替换" Click="AddReplaceRuleFromSession_Click" />
+                                        <Separator />
+                                        <MenuItem x:Name="ResendSelectedSessionsMenuItem" Header="重放">
+                                            <MenuItem Header="普通重放" Tag="3" Click="ResendSelectedSessions_Click" />
+                                            <MenuItem Header="重放并拦截上行" Tag="1" Click="ResendSelectedSessions_Click" />
+                                            <MenuItem Header="重放并拦截下行" Tag="2" Click="ResendSelectedSessions_Click" />
+                                            <Separator />
+                                            <MenuItem Header="从构造器重放" Click="ResendFromBuilder_Click" />
+                                        </MenuItem>
+                                        <MenuItem x:Name="CloseSelectedConnectionsMenuItem" Header="断开选中的会话连接" Click="CloseSelectedConnections_Click" />
+                                        <Separator />
+                                        <MenuItem x:Name="AutoScrollFromSessionsMenuItem" Header="跟随显示" IsCheckable="True" Click="AutoScrollFromSessions_Click" />
+                                        <MenuItem x:Name="DeleteSelectedSessionsMenuItem" Header="删除选中" InputGestureText="Del" Click="DeleteSelectedSessions_Click" />
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
+                                <DataGrid.Resources>
+                                    <Style x:Key="SessionGridCellStyle" TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                        <Setter Property="Padding" Value="8,2" />
+                                        <Setter Property="MinHeight" Value="26" />
+                                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                                    <Condition Binding="{Binding DataContext.IsIntercepted, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Background" Value="#FFB35F" />
+                                                <Setter Property="BorderBrush" Value="#FF6A00" />
+                                                <Setter Property="Foreground" Value="#1F2937" />
+                                            </MultiDataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                                    <Condition Binding="{Binding DataContext.HasBlockRuleHits, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Background" Value="#FFD1AD" />
+                                                <Setter Property="BorderBrush" Value="#F05A24" />
+                                                <Setter Property="Foreground" Value="#7C2D12" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <Style x:Key="SessionIndexCellStyle" TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource SessionGridCellStyle}">
+                                        <Setter Property="Padding" Value="0,2,8,2" />
+                                    </Style>
+                                    <Style x:Key="SessionIndexHeaderStyle" TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="Padding" Value="20,5,8,5" />
+                                    </Style>
+                                    <Style x:Key="SessionIndexTextStyle" TargetType="{x:Type TextBlock}">
+                                        <Setter Property="Margin" Value="0" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                        <Setter Property="TextDecorations" Value="{Binding RowTextDecorations}" />
+                                    </Style>
+                                    <Style x:Key="SessionIconImageStyle" TargetType="{x:Type Image}">
+                                        <Setter Property="Width" Value="16" />
+                                        <Setter Property="Height" Value="16" />
+                                        <Setter Property="Source" Value="{Binding SessionIconImage}" />
+                                        <Setter Property="ToolTip" Value="{Binding SessionIconToolTip}" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                        <Setter Property="SnapsToDevicePixels" Value="True" />
+                                        <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
+                                    </Style>
+                                    <Style x:Key="SessionMethodTextStyle" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource MethodCellTextStyle}">
+                                        <Setter Property="Margin" Value="0" />
+                                        <Setter Property="HorizontalAlignment" Value="Left" />
+                                        <Setter Property="TextDecorations" Value="{Binding RowTextDecorations}" />
+                                    </Style>
+                                    <Style x:Key="SessionStateTextStyle" TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="Foreground" Value="{Binding StatusBrush}" />
+                                        <Setter Property="TextDecorations" Value="{Binding RowTextDecorations}" />
+                                    </Style>
+                                    <Style x:Key="SessionTextCellTextStyle" TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                        <Setter Property="TextDecorations" Value="{Binding RowTextDecorations}" />
+                                    </Style>
+                                    <Style x:Key="SessionUrlTextCellTextStyle" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource SessionTextCellTextStyle}">
+                                        <Setter Property="ToolTip" Value="{Binding Url}" />
+                                        <Setter Property="Foreground" Value="{Binding UrlForeground}" />
+                                        <Setter Property="FontWeight" Value="{Binding UrlFontWeight}" />
+                                    </Style>
+                                    <Style x:Key="SessionNotesEditingStyle" TargetType="{x:Type TextBox}">
+                                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                                        <Setter Property="Padding" Value="0" />
+                                    </Style>
+                                </DataGrid.Resources>
+                                <DataGrid.CellStyle>
+                                    <StaticResource ResourceKey="SessionGridCellStyle" />
+                                </DataGrid.CellStyle>
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                        <Setter Property="MinHeight" Value="26" />
+                                        <Setter Property="Background" Value="{Binding RowBackground}" />
+                                        <Setter Property="ToolTip" Value="{Binding RuleHitSummary}" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                                    <Condition Binding="{Binding IsIntercepted}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Background" Value="#FFB35F" />
+                                                <Setter Property="BorderBrush" Value="#FF6A00" />
+                                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                            </MultiDataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                                    <Condition Binding="{Binding HasBlockRuleHits}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Background" Value="#FFD1AD" />
+                                                <Setter Property="BorderBrush" Value="#F05A24" />
+                                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn x:Name="IndexColumn" Header="#" Width="82" MinWidth="76" IsReadOnly="True" CellStyle="{StaticResource SessionIndexCellStyle}" HeaderStyle="{StaticResource SessionIndexHeaderStyle}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Border Width="3"
+                                                            Margin="0,3,0,3"
+                                                            HorizontalAlignment="Left"
+                                                            Background="{Binding RowAccentBrush}"
+                                                            CornerRadius="0,2,2,0" />
+                                                    <StackPanel Margin="16,0,0,0"
+                                                                Orientation="Horizontal"
+                                                                VerticalAlignment="Center">
+                                                        <Image Style="{StaticResource SessionIconImageStyle}" />
+                                                        <TextBlock Margin="7,0,0,0"
+                                                                   Style="{StaticResource SessionIndexTextStyle}"
+                                                                   Text="{Binding Index}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn x:Name="FavoriteColumn"
+                                                            Header="★"
+                                                            Width="42"
+                                                            SortMemberPath="IsFavorite"
+                                                            IsReadOnly="True"
+                                                            HeaderStyle="{StaticResource SessionFavoriteHeaderStyle}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource FavoriteCellButtonStyle}"
+                                                        Click="FavoriteSession_Click"
+                                                        ToolTip="{Binding FavoriteToolTip}">
+                                                    <TextBlock FontSize="15"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{Binding FavoriteBrush}"
+                                                               Text="{Binding FavoriteGlyph}" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn x:Name="MethodColumn" Header="方式" Binding="{Binding DisplayMethod}" Width="62" DisplayIndex="2" IsReadOnly="True" ElementStyle="{StaticResource SessionMethodTextStyle}" />
+                                    <DataGridTextColumn x:Name="UrlColumn" Header="URL" Binding="{Binding Url}" Width="4*" DisplayIndex="3" IsReadOnly="True" ElementStyle="{StaticResource SessionUrlTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="StateColumn" Header="状态" Binding="{Binding State}" Width="68" DisplayIndex="4" IsReadOnly="True" ElementStyle="{StaticResource SessionStateTextStyle}" />
+                                    <DataGridTextColumn x:Name="LengthColumn" Header="长度" Binding="{Binding ResponseLength}" Width="96" DisplayIndex="5" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="TypeColumn" Header="类型" Binding="{Binding ResponseType}" Width="104" DisplayIndex="6" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="NotesColumn" Header="备注" Binding="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Width="140" DisplayIndex="7" ElementStyle="{StaticResource SessionTextCellTextStyle}" EditingElementStyle="{StaticResource SessionNotesEditingStyle}" />
+                                    <DataGridTextColumn x:Name="ProcessColumn" Header="进程" Binding="{Binding Process}" Width="92" DisplayIndex="8" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <GridSplitter x:Name="WorkspaceSplitter" Grid.Column="1" Width="10" HorizontalAlignment="Stretch" DragCompleted="LayoutSplitter_DragCompleted" />
+
+                <Grid x:Name="DetailHostGrid" Grid.Column="2">
+                    <TabControl x:Name="WorkspaceTabControl"
+                                Background="Transparent"
+                                Style="{StaticResource WorkspaceTabControlStyle}"
+                                SelectionChanged="WorkspaceTabControl_SelectionChanged">
+                        <TabItem x:Name="SessionListTab" Style="{StaticResource WorkspaceTabItemStyle}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Margin="0,0,6,0"
+                                               VerticalAlignment="Center"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="12"
+                                               Text="&#xE8A5;" />
+                                    <TextBlock VerticalAlignment="Center" Text="检查会话" />
+                                </StackPanel>
+                            </TabItem.Header>
+                    <Border x:Name="RequestDataPanel"
+                            Background="Transparent"
+                            BorderThickness="0">
+                        <Grid x:Name="RequestResponseGrid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition x:Name="RequestPanelRow" Height="*" />
+                                <RowDefinition x:Name="DetailSplitterRow" Height="8" />
+                                <RowDefinition x:Name="ResponsePanelRow" Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Border x:Name="RequestSectionBorder"
+                                    Grid.Row="0"
+                                    Style="{StaticResource PanelSectionBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="36" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <Border Grid.Row="0"
+                                            Background="{StaticResource SurfaceAltBrush}"
+                                            BorderBrush="{StaticResource DividerBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            CornerRadius="8,8,0,0">
+                                        <DockPanel Margin="10,0" LastChildFill="False">
+                                            <Button DockPanel.Dock="Right"
+                                                    Style="{StaticResource DetailHeaderIconButtonStyle}"
+                                                    Click="RequestZoom_Click"
+                                                    ToolTip="放大或还原请求区域">
+                                                <TextBlock x:Name="RequestZoomGlyph" Style="{StaticResource GlyphTextStyle}" Text="&#xE740;" />
+                                            </Button>
+                                            <StackPanel DockPanel.Dock="Right"
+                                                        Margin="10,0,0,0"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Center">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsHttpSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Style="{StaticResource DetailSearchLabelTextStyle}" Text="查找" />
+                                                <TextBox x:Name="RequestDetailSearchTextBox"
+                                                         Style="{StaticResource DetailSearchTextBoxStyle}"
+                                                         KeyDown="RequestDetailSearchTextBox_KeyDown"
+                                                         Text="{Binding Detail.RequestSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Style="{StaticResource DetailSectionTitleTextStyle}" Text="{Binding Detail.RequestSectionTitle}" />
+                                                <Border Style="{StaticResource DetailBadgeBorderStyle}"
+                                                        Visibility="{Binding Detail.HasRequestDisplayBody, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="显示解密" />
+                                                </Border>
+                                            </StackPanel>
+                                            <Border DockPanel.Dock="Right" Style="{StaticResource DetailBadgeBorderStyle}">
+                                                <TextBlock Text="{Binding Detail.RequestMethod}" />
+                                            </Border>
+                                        </DockPanel>
+                                    </Border>
+
+                                    <Grid Grid.Row="1">
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="请选择一个会话">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionTextStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Detail.HasSelection}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TabControl x:Name="RequestTabControl"
+                                                    Margin="8,4,8,8"
+                                                    ItemContainerStyle="{StaticResource DetailTabItemStyle}"
+                                                    SelectionChanged="RequestTabControl_SelectionChanged">
+                                            <TabControl.Style>
+                                                <Style TargetType="TabControl" BasedOn="{StaticResource {x:Type TabControl}}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Detail.HasSelection}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TabControl.Style>
+                                            <TabItem x:Name="RequestRawTab" Header="原始视图">
+                                                <Grid>
+                                                    <controls:HttpSyntaxTextBox x:Name="RequestRawViewer"
+                                                                                SourceText="{Binding Detail.RequestRaw}"
+                                                                                HighlightMode="RequestRaw"
+                                                                                SearchText="{Binding Detail.RequestSearchText}"
+                                                                                SearchIgnoreCase="{Binding Detail.DetailSearchIgnoreCase}">
+                                                        <controls:HttpSyntaxTextBox.Style>
+                                                            <Style TargetType="{x:Type controls:HttpSyntaxTextBox}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Detail.IsRequestInlineEditing}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </controls:HttpSyntaxTextBox.Style>
+                                                    </controls:HttpSyntaxTextBox>
+                                                    <TextBox AcceptsReturn="True"
+                                                             AcceptsTab="True"
+                                                             FontFamily="Consolas, Microsoft YaHei UI"
+                                                             FontSize="11.5"
+                                                             HorizontalScrollBarVisibility="Auto"
+                                                             Text="{Binding Detail.EditableRequestRaw, UpdateSourceTrigger=PropertyChanged}"
+                                                             TextWrapping="NoWrap"
+                                                             VerticalScrollBarVisibility="Auto">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Setter Property="Padding" Value="10" />
+                                                                <Setter Property="BorderThickness" Value="0" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Detail.IsRequestInlineEditing}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                </Grid>
+                                            </TabItem>
+                                            <TabItem x:Name="RequestHeadersTab" Header="协议头">
+                                                <controls:NameValueTableControl Rows="{Binding Detail.RequestHeaderRows}" EmptyText="无请求协议头" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestParamsTab" Header="参数视图">
+                                                <controls:NameValueTableControl Rows="{Binding Detail.RequestQueryRows}" EmptyText="无请求参数" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestBodyTab" Header="请求数据">
+                                                <controls:RequestBodyView x:Name="RequestBodyViewer"
+                                                                          RawText="{Binding Detail.RequestBody}"
+                                                                          SearchText="{Binding Detail.RequestSearchText}"
+                                                                          SearchIgnoreCase="{Binding Detail.DetailSearchIgnoreCase}"
+                                                                          UrlEncodedRows="{Binding Detail.RequestBodyRows}"
+                                                                          HasUrlEncodedRows="{Binding Detail.HasRequestBodyRows}" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestHexTab" Header="HEX视图">
+                                                <controls:HexViewControl Bytes="{Binding Detail.RequestHexBytes}"
+                                                                         HeaderLength="{Binding Detail.RequestHexHeaderLength}"
+                                                                         VirtualSource="{Binding Detail.RequestHexSource}"
+                                                                         EnableBodyCopyActions="True"
+                                                                         EmptyText="无请求十六进制数据" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestCookiesTab" Header="Cookies">
+                                                <controls:NameValueTableControl Rows="{Binding Detail.RequestCookieRows}" EmptyText="无请求 Cookies" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestJsonTab" Header="JSON视图">
+                                                <controls:JsonTreeViewControl JsonText="{Binding Detail.RequestJson}" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestXmlTab" Header="XML视图">
+                                                <controls:HttpSyntaxTextBox x:Name="RequestXmlViewer"
+                                                                            SourceText="{Binding Detail.RequestXml}"
+                                                                            HighlightMode="Body"
+                                                                            SearchText="{Binding Detail.RequestSearchText}"
+                                                                            SearchIgnoreCase="{Binding Detail.DetailSearchIgnoreCase}" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestTlsFingerprintTab" Header="TLS指纹">
+                                                <controls:NameValueTableControl Rows="{Binding Detail.RequestTlsFingerprintRows}"
+                                                                                EmptyText="无 TLS 指纹"
+                                                                                ShowExtraColumn="False" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestWebSocketTab" Header="WebSocket">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsWebSocketSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:WebSocketMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                                   SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                                   DisplayMode="Flow"
+                                                                                   Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestTcpTab" Header="TCP">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsTcpSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:TcpMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                             SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                             DisplayMode="Flow"
+                                                                             Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="RequestUdpTab" Header="UDP">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsUdpSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:UdpMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                             SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                             DisplayMode="Flow"
+                                                                             Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                        </TabControl>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <GridSplitter x:Name="RequestResponseSplitter"
+                                          Grid.Row="1"
+                                          Height="8"
+                                          HorizontalAlignment="Stretch"
+                                          ResizeDirection="Rows"
+                                          ResizeBehavior="PreviousAndNext"
+                                          DragCompleted="LayoutSplitter_DragCompleted" />
+
+                            <Border x:Name="ResponseSectionBorder"
+                                    Grid.Row="2"
+                                    Style="{StaticResource PanelSectionBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <Border Grid.Row="0"
+                                            Background="{StaticResource SurfaceAltBrush}"
+                                            BorderBrush="{StaticResource DividerBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            CornerRadius="8,8,0,0">
+                                        <DockPanel Margin="10,0" LastChildFill="False">
+                                            <Button DockPanel.Dock="Right"
+                                                    Style="{StaticResource DetailHeaderIconButtonStyle}"
+                                                    Click="ResponseZoom_Click"
+                                                    ToolTip="放大或还原响应区域">
+                                                <TextBlock x:Name="ResponseZoomGlyph" Style="{StaticResource GlyphTextStyle}" Text="&#xE740;" />
+                                            </Button>
+                                            <StackPanel DockPanel.Dock="Right"
+                                                        Margin="10,0,0,0"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Center">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsHttpSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Style="{StaticResource DetailSearchLabelTextStyle}" Text="查找" />
+                                                <TextBox x:Name="ResponseDetailSearchTextBox"
+                                                         Style="{StaticResource DetailSearchTextBoxStyle}"
+                                                         KeyDown="ResponseDetailSearchTextBox_KeyDown"
+                                                         Text="{Binding Detail.ResponseSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+                                            <StackPanel DockPanel.Dock="Right"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Center"
+                                                        Visibility="{Binding IsSelectedSessionIntercepted, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Button Margin="0,0,8,0"
+                                                        Style="{StaticResource DetailBreakpointWarningButtonStyle}"
+                                                        Command="{Binding ResendSelectedCommand}"
+                                                        Content="放行当前" />
+                                                <Button Margin="0,0,8,0"
+                                                        Style="{StaticResource DetailBreakpointSuccessButtonStyle}"
+                                                        Command="{Binding ReleaseCurrentCommand}"
+                                                        Content="运行到结束" />
+                                                <Button Style="{StaticResource DetailBreakpointDangerButtonStyle}"
+                                                        Command="{Binding CloseSessionCommand}"
+                                                        Content="断开连接" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Style="{StaticResource DetailSectionTitleTextStyle}" Text="{Binding Detail.ResponseSectionTitle}" />
+                                                <Border Style="{StaticResource DetailBadgeBorderStyle}"
+                                                        Visibility="{Binding Detail.HasResponseDisplayBody, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="显示解密" />
+                                                </Border>
+                                                <Border Style="{StaticResource DetailBadgeBorderStyle}"
+                                                        Visibility="{Binding Detail.IsHttpSession, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="{Binding Detail.ResponseStateCode}" />
+                                                </Border>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+
+                                    <Grid Grid.Row="1">
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="此请求正在发送中">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionTextStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding Detail.HasSelection}" Value="True" />
+                                                                <Condition Binding="{Binding Detail.IsHttpSession}" Value="True" />
+                                                                <Condition Binding="{Binding Detail.ResponseHeaders}" Value="" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TabControl x:Name="ResponseTabControl"
+                                                    Margin="8,4,8,8"
+                                                    ItemContainerStyle="{StaticResource DetailTabItemStyle}">
+                                            <TabControl.Style>
+                                                <Style TargetType="TabControl" BasedOn="{StaticResource {x:Type TabControl}}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Detail.HasSelection}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Detail.IsTcpSession}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Detail.IsUdpSession}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TabControl.Style>
+                                            <TabItem x:Name="ResponseRawTab" Header="原始响应">
+                                                <Grid>
+                                                    <controls:HttpSyntaxTextBox x:Name="ResponseRawViewer"
+                                                                                SourceText="{Binding Detail.ResponseRaw}"
+                                                                                HighlightMode="ResponseRaw"
+                                                                                SearchText="{Binding Detail.ResponseSearchText}"
+                                                                                SearchIgnoreCase="{Binding Detail.DetailSearchIgnoreCase}">
+                                                        <controls:HttpSyntaxTextBox.Style>
+                                                            <Style TargetType="{x:Type controls:HttpSyntaxTextBox}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Detail.IsResponseInlineEditing}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </controls:HttpSyntaxTextBox.Style>
+                                                    </controls:HttpSyntaxTextBox>
+                                                    <TextBox AcceptsReturn="True"
+                                                             AcceptsTab="True"
+                                                             FontFamily="Consolas, Microsoft YaHei UI"
+                                                             FontSize="11.5"
+                                                             HorizontalScrollBarVisibility="Auto"
+                                                             Text="{Binding Detail.EditableResponseRaw, UpdateSourceTrigger=PropertyChanged}"
+                                                             TextWrapping="NoWrap"
+                                                             VerticalScrollBarVisibility="Auto">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Setter Property="Padding" Value="10" />
+                                                                <Setter Property="BorderThickness" Value="0" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Detail.IsResponseInlineEditing}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                </Grid>
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseHeadersTab" Header="协议头">
+                                                <controls:NameValueTableControl Rows="{Binding Detail.ResponseHeaderRows}" EmptyText="无响应协议头" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseTextTab" Header="响应文本">
+                                                <controls:HttpSyntaxTextBox x:Name="ResponseTextViewer"
+                                                                            SourceText="{Binding Detail.ResponseText}"
+                                                                            HighlightMode="Body"
+                                                                            SearchText="{Binding Detail.ResponseSearchText}"
+                                                                            SearchIgnoreCase="{Binding Detail.DetailSearchIgnoreCase}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseImageTab" Header="图片视图">
+                                                <controls:ImagePreviewControl ImageBytes="{Binding Detail.ResponseImageBytes}"
+                                                                              ImageType="{Binding Detail.ResponseImageType}"
+                                                                              EmptyText="暂无图片响应" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseHtmlTab" Header="HTML视图">
+                                                <controls:HtmlPreviewControl HtmlText="{Binding Detail.ResponseHtml}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseXmlTab" Header="XML视图">
+                                                <controls:HttpSyntaxTextBox x:Name="ResponseXmlViewer"
+                                                                            SourceText="{Binding Detail.ResponseXml}"
+                                                                            HighlightMode="Body"
+                                                                            SearchText="{Binding Detail.ResponseSearchText}"
+                                                                            SearchIgnoreCase="{Binding Detail.DetailSearchIgnoreCase}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseHexTab" Header="HEX视图">
+                                                <controls:HexViewControl Bytes="{Binding Detail.ResponseHexBytes}"
+                                                                         HeaderLength="{Binding Detail.ResponseHexHeaderLength}"
+                                                                         VirtualSource="{Binding Detail.ResponseHexSource}"
+                                                                         EmptyText="无响应十六进制数据" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseWebSocketTab" Header="文本视图">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsWebSocketSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:WebSocketMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                                   SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                                   DisplayMode="PayloadText"
+                                                                                   Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseWebSocketHexTab" Header="HEX视图">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsWebSocketSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:WebSocketMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                                   SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                                   DisplayMode="PayloadHex"
+                                                                                   Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseWebSocketJsonTab" Header="JSON视图">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsWebSocketSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:WebSocketMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                                   SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                                   DisplayMode="PayloadJson"
+                                                                                   Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseWebSocketProtobufTab" Header="ProtoBuf">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsWebSocketSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:WebSocketMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                                   SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                                   DisplayMode="PayloadProtobuf"
+                                                                                   Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseWebSocketReplayTab" Header="主动发送">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsWebSocketSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:WebSocketMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                                   SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                                   DisplayMode="Replay"
+                                                                                   Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseTcpTab" Header="TCP">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsTcpSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:TcpMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                             SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                             DisplayMode="Inspector"
+                                                                             Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseUdpTab" Header="UDP">
+                                                <TabItem.Style>
+                                                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Detail.IsUdpSession}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TabItem.Style>
+                                                <controls:UdpMessagesControl Entries="{Binding Detail.SocketEntries}"
+                                                                             SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                             DisplayMode="Inspector"
+                                                                             Theology="{Binding SelectedSession.Theology, TargetNullValue=0}" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseCookiesTab" Header="Cookies">
+                                                <controls:NameValueTableControl Rows="{Binding Detail.ResponseCookieRows}"
+                                                                               ShowExtraColumn="True"
+                                                                               EmptyText="无响应 Cookies" />
+                                            </TabItem>
+                                            <TabItem x:Name="ResponseJsonTab" Header="JSON视图">
+                                                <controls:JsonTreeViewControl JsonText="{Binding Detail.ResponseJson}" />
+                                            </TabItem>
+                                        </TabControl>
+
+                                        <controls:TcpMessagesControl Margin="8,4,8,8"
+                                                                     Entries="{Binding Detail.SocketEntries}"
+                                                                     SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                     DisplayMode="Inspector"
+                                                                     Theology="{Binding SelectedSession.Theology, TargetNullValue=0}">
+                                            <controls:TcpMessagesControl.Style>
+                                                <Style TargetType="{x:Type controls:TcpMessagesControl}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding Detail.HasSelection}" Value="True" />
+                                                                <Condition Binding="{Binding Detail.IsTcpSession}" Value="True" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </controls:TcpMessagesControl.Style>
+                                        </controls:TcpMessagesControl>
+
+                                        <controls:UdpMessagesControl Margin="8,4,8,8"
+                                                                     Entries="{Binding Detail.SocketEntries}"
+                                                                     SelectedEntry="{Binding Detail.SelectedSocketEntry, Mode=TwoWay}"
+                                                                     DisplayMode="Inspector"
+                                                                     Theology="{Binding SelectedSession.Theology, TargetNullValue=0}">
+                                            <controls:UdpMessagesControl.Style>
+                                                <Style TargetType="{x:Type controls:UdpMessagesControl}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding Detail.HasSelection}" Value="True" />
+                                                                <Condition Binding="{Binding Detail.IsUdpSession}" Value="True" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </controls:UdpMessagesControl.Style>
+                                        </controls:UdpMessagesControl>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                        </TabItem>
+
+                        <TabItem x:Name="ReplaceListTab" Style="{StaticResource WorkspaceTabItemStyle}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Margin="0,0,6,0"
+                                               VerticalAlignment="Center"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="12"
+                                               Text="&#xE8AB;" />
+                                    <TextBlock VerticalAlignment="Center" Text="替换列表" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <DockPanel Margin="12,10" LastChildFill="False">
+                                        <Button Style="{StaticResource ToolbarButtonStyle}"
+                                                Click="AddReplaceListRule_Click"
+                                                Content="添加替换" />
+                                        <Button x:Name="EditReplaceListRuleButton"
+                                                Margin="8,0,0,0"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Click="EditReplaceListRule_Click"
+                                                Content="编辑" />
+                                        <Button x:Name="RemoveReplaceListRuleButton"
+                                                Margin="8,0,0,0"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Click="RemoveReplaceListRule_Click"
+                                                Content="删除" />
+                                    </DockPanel>
+                                    <DataGrid x:Name="ReplaceListGrid"
+                                              Grid.Row="1"
+                                              Margin="0"
+                                              ItemsSource="{Binding ReplaceRuleItems}"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              CanUserResizeRows="False"
+                                              HeadersVisibility="Column"
+                                              IsReadOnly="True"
+                                              SelectionMode="Single"
+                                              SelectionUnit="FullRow"
+                                              RowHeight="26"
+                                              ColumnHeaderHeight="30"
+                                              FontSize="12"
+                                              MouseDoubleClick="ReplaceListGrid_MouseDoubleClick"
+                                              SelectionChanged="ReplaceListGrid_SelectionChanged">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="48" />
+                                            <DataGridTextColumn Header="替换目标" Binding="{Binding DisplayTarget}" Width="2*" />
+                                            <DataGridTextColumn Header="替换类型" Binding="{Binding DataKind}" Width="160" />
+                                            <DataGridTextColumn Header="被替换内容" Binding="{Binding SourceContent}" Width="2*" />
+                                            <DataGridTextColumn Header="用作替换内容" Binding="{Binding ReplacementContent}" Width="2*" />
+                                            <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="90" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+                        </TabItem>
+
+                        <TabItem x:Name="InterceptListTab" Style="{StaticResource WorkspaceTabItemStyle}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Margin="0,0,6,0"
+                                               VerticalAlignment="Center"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="12"
+                                               Foreground="#CF3F32"
+                                               Text="&#xE711;" />
+                                    <TextBlock VerticalAlignment="Center" Text="拦截列表" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <DockPanel Margin="12,10" LastChildFill="False">
+                                        <Button Style="{StaticResource ToolbarButtonStyle}"
+                                                Click="AddInterceptListRule_Click"
+                                                Content="添加拦截" />
+                                        <Button x:Name="EditInterceptListRuleButton"
+                                                Margin="8,0,0,0"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Click="EditInterceptListRule_Click"
+                                                Content="编辑" />
+                                        <Button x:Name="RemoveInterceptListRuleButton"
+                                                Margin="8,0,0,0"
+                                                Style="{StaticResource ToolbarButtonStyle}"
+                                                Click="RemoveInterceptListRule_Click"
+                                                Content="删除" />
+                                    </DockPanel>
+                                    <DataGrid x:Name="InterceptListGrid"
+                                              Grid.Row="1"
+                                              Margin="0"
+                                              ItemsSource="{Binding InterceptListItems}"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              CanUserResizeRows="False"
+                                              HeadersVisibility="Column"
+                                              IsReadOnly="True"
+                                              SelectionMode="Single"
+                                              SelectionUnit="FullRow"
+                                              RowHeight="26"
+                                              ColumnHeaderHeight="30"
+                                              FontSize="12"
+                                              MouseDoubleClick="InterceptListGrid_MouseDoubleClick"
+                                              SelectionChanged="InterceptListGrid_SelectionChanged">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="48" />
+                                            <DataGridTextColumn Header="包含" Binding="{Binding Contains}" Width="80" />
+                                            <DataGridTextColumn Header="拦截目标" Binding="{Binding Target}" Width="2*" />
+                                            <DataGridTextColumn Header="拦截类型" Binding="{Binding InterceptType}" Width="160" />
+                                            <DataGridTextColumn Header="挂起进程" Binding="{Binding SuspendProcess}" Width="88" />
+                                            <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="90" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+                        </TabItem>
+                    </TabControl>
+
+                    <Border x:Name="ColumnPickerPanel"
+                            Visibility="Collapsed"
+                            Style="{StaticResource CardBorderStyle}">
+                        <StackPanel Margin="20,18">
+                            <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="列选择" />
+                            <TextBlock Margin="0,4,0,12" Style="{StaticResource CaptionTextStyle}" Text="切换列表中需要显示的列" />
+                            <CheckBox Content="序号" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=IndexColumn}" />
+                            <CheckBox Content="方式" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=MethodColumn}" />
+                            <CheckBox Content="状态" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=StateColumn}" />
+                            <CheckBox Content="请求地址" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=UrlColumn}" />
+                            <CheckBox Content="响应长度" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=LengthColumn}" />
+                            <CheckBox Content="响应类型" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=TypeColumn}" />
+                            <CheckBox Content="进程" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=ProcessColumn}" />
+                            <CheckBox Content="备注" IsChecked="True" Checked="ColumnCheckChanged" Unchecked="ColumnCheckChanged" Tag="{Binding ElementName=NotesColumn}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+            </Grid>
+
+            <Border Grid.Row="3"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0">
+                <DockPanel Margin="12,0" LastChildFill="True">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ComboBox x:Name="CaptureScopeComboBox"
+                                  Width="126"
+                                  Height="30"
+                                  Padding="10,4"
+                                  SelectedValuePath="Tag"
+                                  SelectionChanged="CaptureScopeComboBox_SelectionChanged"
+                                  ToolTip="选择抓取所有进程或指定进程">
+                            <ComboBoxItem Content="所有进程" Tag="All" />
+                            <ComboBoxItem Content="指定进程" Tag="Process" />
+                        </ComboBox>
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <Button Style="{StaticResource FooterButtonStyle}" Click="IeProxy_Click" Content="{Binding StatusLeft}" />
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <Button Style="{StaticResource FooterButtonStyle}" Click="CaptureToggle_Click" Content="{Binding StatusMiddle}" />
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <Button Style="{StaticResource FooterButtonStyle}" Click="BreakpointMode_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="BreakpointGlyph" Style="{StaticResource GlyphTextStyle}" Text="&#xF127;" />
+                                <TextBlock x:Name="BreakpointLabel" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" />
+                            </StackPanel>
+                        </Button>
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <primitives:ToggleButton MinWidth="72"
+                                                 Style="{StaticResource ToolbarToggleButtonStyle}"
+                                                 IsChecked="{Binding Mcp.Enabled, Mode=TwoWay}"
+                                                 ToolTip="启用或关闭内置 MCP 服务">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="{x:Type Ellipse}">
+                                            <Setter Property="Fill" Value="#C3602C" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Mcp.Enabled}" Value="False">
+                                                    <Setter Property="Fill" Value="#B6C2D2" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Mcp.ServerRunning}" Value="True">
+                                                    <Setter Property="Fill" Value="#28A35B" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock VerticalAlignment="Center" Text="MCP" />
+                            </StackPanel>
+                        </primitives:ToggleButton>
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <primitives:ToggleButton x:Name="CloudHookToggle"
+                                                 MinWidth="92"
+                                                 Style="{StaticResource ToolbarToggleButtonStyle}"
+                                                 IsChecked="{Binding CloudHook.Enabled, Mode=TwoWay}"
+                                                 ToolTip="{Binding CloudHook.ToolTipText}"
+                                                 PreviewMouseRightButtonUp="CloudHookToggle_PreviewMouseRightButtonUp">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="{x:Type Ellipse}">
+                                            <Setter Property="Fill" Value="#B6C2D2" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CloudHook.Enabled}" Value="True">
+                                                    <Setter Property="Fill" Value="#C3602C" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding CloudHook.Starting}" Value="True">
+                                                    <Setter Property="Fill" Value="#E6A23C" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding CloudHook.Running}" Value="True">
+                                                    <Setter Property="Fill" Value="#28A35B" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding CloudHook.ButtonText}" />
+                            </StackPanel>
+                        </primitives:ToggleButton>
+                        <Popup x:Name="CloudHookLogPopup"
+                               AllowsTransparency="True"
+                               Placement="Top"
+                               PlacementTarget="{Binding ElementName=CloudHookToggle}"
+                               StaysOpen="False">
+                            <Border Width="560"
+                                    Height="300"
+                                    Padding="12,10"
+                                    Background="#FFFFFF"
+                                    BorderBrush="#D8DEE8"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <DockPanel>
+                                    <DockPanel DockPanel.Dock="Top" LastChildFill="False" Margin="0,0,0,8">
+                                        <TextBlock VerticalAlignment="Center"
+                                                   FontWeight="SemiBold"
+                                                   Text="安卓 Cloud Hook 日志" />
+                                        <Button DockPanel.Dock="Right"
+                                                Padding="10,4"
+                                                Click="ClearCloudHookLogs_Click"
+                                                Content="清空" />
+                                    </DockPanel>
+                                    <TextBox x:Name="CloudHookLogTextBox"
+                                             AcceptsReturn="True"
+                                             FontFamily="Consolas"
+                                             FontSize="12"
+                                             IsReadOnly="True"
+                                             Text="{Binding CloudHook.LogText, Mode=OneWay}"
+                                             TextWrapping="Wrap"
+                                             VerticalScrollBarVisibility="Auto" />
+                                </DockPanel>
+                            </Border>
+                        </Popup>
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <TextBlock VerticalAlignment="Center" Style="{StaticResource CaptionTextStyle}" Text="{Binding Mcp.FooterStatusText}" />
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <TextBlock VerticalAlignment="Center" Style="{StaticResource CaptionTextStyle}" Text="{Binding CloudHook.FooterStatusText}" />
+                        <Border Width="1" Margin="8,8" Background="{StaticResource DividerBrush}" />
+                        <TextBlock VerticalAlignment="Center" Style="{StaticResource CaptionTextStyle}" Text="{Binding StatusRight}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <Border x:Name="MainAlertBorder"
+                    Grid.RowSpan="4"
+                    Panel.ZIndex="80"
+                    MinWidth="292"
+                    MaxWidth="560"
+                    Margin="0,14,0,0"
+                    Padding="14,10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Background="#FEF0F0"
+                    BorderBrush="#FDE2E2"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Border x:Name="MainAlertIconBorder"
+                            Width="14"
+                            Height="14"
+                            VerticalAlignment="Center"
+                            Background="#F56C6C"
+                            CornerRadius="7">
+                        <TextBlock x:Name="MainAlertGlyphTextBlock"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="8"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   Text="×" />
+                    </Border>
+                    <TextBlock x:Name="MainAlertTextBlock"
+                               MaxWidth="500"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="13"
+                               Foreground="#F56C6C"
+                               TextTrimming="CharacterEllipsis"
+                               Text="操作失败" />
+                    <Button x:Name="MainAlertActionButton"
+                            Margin="12,0,0,0"
+                            MinWidth="68"
+                            Padding="10,3"
+                            VerticalAlignment="Center"
+                            Click="MainAlertActionButton_Click"
+                            Content="查看"
+                            Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

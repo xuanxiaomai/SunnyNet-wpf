@@ -1,0 +1,1178 @@
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Data;
+using System.Windows.Threading;
+using SunnyNet.Wpf.Models;
+using SunnyNet.Wpf.ViewModels;
+
+namespace SunnyNet.Wpf.Windows;
+
+public partial class RulesCenterWindow : Window
+{
+    private readonly MainWindowViewModel _viewModel;
+    private readonly string _initialPage;
+    private readonly DispatcherTimer _alertTimer = new() { Interval = TimeSpan.FromSeconds(2.8) };
+    private string _currentPage = "替换列表";
+    private readonly Dictionary<string, RulePageInfo> _pages = new()
+    {
+        ["替换列表"] = new RulePageInfo("替换列表", "按 URL/内容替换请求或响应数据。"),
+        ["拦截列表"] = new RulePageInfo("拦截列表", "按目标屏蔽或挂起请求。"),
+        ["请求断点"] = new RulePageInfo("请求断点", "命中 URL、参数、协议头或包体后自动进入上行/下行断点编辑。"),
+        ["HTTP屏蔽"] = new RulePageInfo("HTTP屏蔽", "仅作用于 HTTP/HTTPS：命中后可断开请求或断开响应。"),
+        ["WebSocket屏蔽"] = new RulePageInfo("WebSocket屏蔽", "仅作用于 WebSocket：命中后可断开连接或按方向丢弃帧。"),
+        ["TCP屏蔽"] = new RulePageInfo("TCP屏蔽", "仅作用于 TCP/TLS-TCP：命中后可断开连接或按方向丢弃数据包。"),
+        ["UDP屏蔽"] = new RulePageInfo("UDP屏蔽", "仅作用于 UDP：命中后可按方向丢弃数据包。"),
+        ["请求重写"] = new RulePageInfo("请求重写", "命中规则后修改请求或响应的结构化内容。"),
+        ["请求映射"] = new RulePageInfo("请求映射", "把命中的请求映射到本地文件、固定内容或新的远程地址。")
+    };
+
+    public RulesCenterWindow(MainWindowViewModel viewModel, string initialPage = "替换列表")
+    {
+        _viewModel = viewModel;
+        initialPage = NormalizeRulePageKey(initialPage);
+        _initialPage = _pages.ContainsKey(initialPage) ? initialPage : "替换列表";
+        InitializeComponent();
+        DataContext = viewModel;
+        _alertTimer.Tick += AlertTimer_Tick;
+        Loaded += (_, _) => ApplyPage(_initialPage);
+    }
+
+    private void ApplyPage(string key)
+    {
+        if (!_pages.TryGetValue(key, out RulePageInfo? page))
+        {
+            return;
+        }
+
+        _currentPage = key;
+        Title = $"规则中心 - {page.Title}";
+        PageTitleTextBlock.Text = page.Title;
+        PageSubtitleTextBlock.Text = page.Placeholder;
+        AddRuleButton.Content = key switch
+        {
+            "替换列表" => "添加替换",
+            "拦截列表" => "添加拦截",
+            "请求断点" => "添加断点",
+            "请求重写" => "添加重写",
+            "请求映射" => "添加映射",
+            _ => "添加屏蔽"
+        };
+
+        bool replaceSelected = key == "替换列表";
+        bool interceptSelected = key == "拦截列表";
+        bool breakpointSelected = key == "请求断点";
+        bool blockSelected = key == "HTTP屏蔽";
+        bool webSocketBlockSelected = key == "WebSocket屏蔽";
+        bool tcpBlockSelected = key == "TCP屏蔽";
+        bool udpBlockSelected = key == "UDP屏蔽";
+        bool rewriteSelected = key == "请求重写";
+        bool mappingSelected = key == "请求映射";
+        bool implemented = replaceSelected || interceptSelected || breakpointSelected || blockSelected || webSocketBlockSelected || tcpBlockSelected || udpBlockSelected || rewriteSelected || mappingSelected;
+
+        if (replaceSelected)
+        {
+            _viewModel.RefreshReplaceRuleIndexes();
+        }
+
+        if (interceptSelected)
+        {
+            _viewModel.RefreshInterceptListItems();
+        }
+
+        ReplaceListGrid.Visibility = replaceSelected ? Visibility.Visible : Visibility.Collapsed;
+        InterceptListGrid.Visibility = interceptSelected ? Visibility.Visible : Visibility.Collapsed;
+        BreakpointRulesGrid.Visibility = breakpointSelected ? Visibility.Visible : Visibility.Collapsed;
+        BlockRulesGrid.Visibility = blockSelected ? Visibility.Visible : Visibility.Collapsed;
+        WebSocketBlockRulesGrid.Visibility = webSocketBlockSelected ? Visibility.Visible : Visibility.Collapsed;
+        TcpBlockRulesGrid.Visibility = tcpBlockSelected ? Visibility.Visible : Visibility.Collapsed;
+        UdpBlockRulesGrid.Visibility = udpBlockSelected ? Visibility.Visible : Visibility.Collapsed;
+        RewriteRulesGrid.Visibility = rewriteSelected ? Visibility.Visible : Visibility.Collapsed;
+        MappingRulesGrid.Visibility = mappingSelected ? Visibility.Visible : Visibility.Collapsed;
+        PlaceholderListPanel.Visibility = implemented ? Visibility.Collapsed : Visibility.Visible;
+        PlaceholderTextBlock.Text = page.Placeholder;
+
+        SelectFirstRuleIfNeeded();
+        UpdateNavSelection(key);
+        UpdateRuleCounts();
+        UpdateCurrentRuleFilter();
+        AddRuleButton.IsEnabled = implemented;
+        UpdateRuleActionButtons();
+    }
+
+    private void NavigationButton_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        if (sender is FrameworkElement { Tag: string pageKey })
+        {
+            ApplyPage(pageKey);
+        }
+    }
+
+    private void UpdateNavSelection(string key)
+    {
+        ReplaceListNavButton.IsChecked = key == "替换列表";
+        InterceptListNavButton.IsChecked = key == "拦截列表";
+        RequestBreakpointNavButton.IsChecked = key == "请求断点";
+        HttpBlockNavButton.IsChecked = key == "HTTP屏蔽";
+        WebSocketBlockNavButton.IsChecked = key == "WebSocket屏蔽";
+        TcpBlockNavButton.IsChecked = key == "TCP屏蔽";
+        UdpBlockNavButton.IsChecked = key == "UDP屏蔽";
+        RequestRewriteNavButton.IsChecked = key == "请求重写";
+        RequestMappingNavButton.IsChecked = key == "请求映射";
+    }
+
+    private void UpdateRuleCounts()
+    {
+        ReplaceListCountTextBlock.Text = _viewModel.ReplaceRuleItems.Count.ToString();
+        InterceptListCountTextBlock.Text = (
+            _viewModel.InterceptRuleItems.Count
+            + _viewModel.RequestBlockRules.Count
+            + _viewModel.WebSocketBlockRules.Count
+            + _viewModel.TcpBlockRules.Count
+            + _viewModel.UdpBlockRules.Count).ToString();
+        RequestBreakpointCountTextBlock.Text = _viewModel.InterceptRuleItems.Count.ToString();
+        HttpBlockCountTextBlock.Text = _viewModel.RequestBlockRules.Count.ToString();
+        WebSocketBlockCountTextBlock.Text = _viewModel.WebSocketBlockRules.Count.ToString();
+        TcpBlockCountTextBlock.Text = _viewModel.TcpBlockRules.Count.ToString();
+        UdpBlockCountTextBlock.Text = _viewModel.UdpBlockRules.Count.ToString();
+        BlockTotalCountTextBlock.Text = (_viewModel.RequestBlockRules.Count
+            + _viewModel.WebSocketBlockRules.Count
+            + _viewModel.TcpBlockRules.Count
+            + _viewModel.UdpBlockRules.Count).ToString();
+        RequestRewriteCountTextBlock.Text = _viewModel.RequestRewriteRules.Count.ToString();
+        RequestMappingCountTextBlock.Text = _viewModel.RequestMappingRules.Count.ToString();
+
+        int total = GetRuleCount(_currentPage);
+        SummaryTotalTextBlock.Text = total.ToString();
+        SummaryEnabledTextBlock.Text = GetEnabledRuleCount(_currentPage).ToString();
+        SummaryDirtyTextBlock.Text = GetDirtyRuleCount(_currentPage).ToString();
+        RuleStatusTextBlock.Text = $"{total} 条";
+    }
+
+    private void RuleSearchTextBox_TextChanged(object sender, TextChangedEventArgs textChangedEventArgs)
+    {
+        UpdateCurrentRuleFilter();
+        UpdateRuleActionButtons();
+    }
+
+    private void UpdateCurrentRuleFilter()
+    {
+        if (RuleSearchTextBox is null)
+        {
+            return;
+        }
+
+        DataGrid? grid = GetCurrentRulesGrid();
+        if (grid?.ItemsSource is null)
+        {
+            return;
+        }
+
+        string keyword = RuleSearchTextBox.Text?.Trim() ?? "";
+        ICollectionView view = CollectionViewSource.GetDefaultView(grid.ItemsSource);
+        view.Filter = string.IsNullOrWhiteSpace(keyword)
+            ? null
+            : item => RuleMatchesSearch(item, keyword);
+        view.Refresh();
+    }
+
+    private DataGrid? GetCurrentRulesGrid()
+    {
+        return _currentPage switch
+        {
+            "替换列表" => ReplaceListGrid,
+            "拦截列表" => InterceptListGrid,
+            "请求断点" => BreakpointRulesGrid,
+            "HTTP屏蔽" => BlockRulesGrid,
+            "WebSocket屏蔽" => WebSocketBlockRulesGrid,
+            "TCP屏蔽" => TcpBlockRulesGrid,
+            "UDP屏蔽" => UdpBlockRulesGrid,
+            "请求重写" => RewriteRulesGrid,
+            "请求映射" => MappingRulesGrid,
+            _ => null
+        };
+    }
+
+    private static bool RuleMatchesSearch(object item, string keyword)
+    {
+        return item switch
+        {
+            InterceptRuleItem rule => ContainsAny(keyword, rule.Name, rule.Direction, rule.Target, rule.Operator, rule.Value, rule.Note, rule.State),
+            RequestRewriteRuleItem rule => ContainsAny(keyword, rule.Name, rule.Method, rule.UrlMatchType, rule.UrlPattern, rule.Direction, rule.Summary, rule.Note, rule.State),
+            RequestMappingRuleItem rule => ContainsAny(keyword, rule.Name, rule.Method, rule.UrlMatchType, rule.UrlPattern, rule.MappingType, rule.DisplayValueType, rule.TargetContent, rule.Note, rule.State),
+            RequestBlockRuleItem rule => ContainsAny(keyword, rule.Name, rule.Method, rule.UrlMatchType, rule.UrlPattern, rule.Action, rule.Note, rule.State),
+            WebSocketBlockRuleItem rule => ContainsAny(keyword, rule.Name, rule.UrlMatchType, rule.UrlPattern, rule.Action, rule.Note, rule.State),
+            TcpBlockRuleItem rule => ContainsAny(keyword, rule.Name, rule.Method, rule.UrlMatchType, rule.UrlPattern, rule.Action, rule.Note, rule.State),
+            UdpBlockRuleItem rule => ContainsAny(keyword, rule.Name, rule.UrlMatchType, rule.UrlPattern, rule.Action, rule.Note, rule.State),
+            ReplaceRuleItem rule => ContainsAny(keyword, rule.DisplayTarget, rule.RuleType, rule.SourceContent, rule.ReplacementContent, rule.State),
+            InterceptListItem rule => ContainsAny(keyword, rule.Contains, rule.Target, rule.InterceptType, rule.SuspendProcess, rule.State),
+            _ => true
+        };
+    }
+
+    private static bool ContainsAny(string keyword, params string?[] values)
+    {
+        return values.Any(value => !string.IsNullOrWhiteSpace(value)
+            && value.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void SelectFirstRuleIfNeeded()
+    {
+        if (_currentPage == "替换列表")
+        {
+            if (ReplaceListGrid.SelectedItem is null && _viewModel.ReplaceRuleItems.Count > 0)
+            {
+                ReplaceListGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "拦截列表")
+        {
+            if (InterceptListGrid.SelectedItem is null && _viewModel.InterceptListItems.Count > 0)
+            {
+                InterceptListGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "请求断点")
+        {
+            if (BreakpointRulesGrid.SelectedItem is null && _viewModel.InterceptRuleItems.Count > 0)
+            {
+                BreakpointRulesGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "HTTP屏蔽")
+        {
+            if (BlockRulesGrid.SelectedItem is null && _viewModel.RequestBlockRules.Count > 0)
+            {
+                BlockRulesGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "WebSocket屏蔽")
+        {
+            if (WebSocketBlockRulesGrid.SelectedItem is null && _viewModel.WebSocketBlockRules.Count > 0)
+            {
+                WebSocketBlockRulesGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "TCP屏蔽")
+        {
+            if (TcpBlockRulesGrid.SelectedItem is null && _viewModel.TcpBlockRules.Count > 0)
+            {
+                TcpBlockRulesGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "UDP屏蔽")
+        {
+            if (UdpBlockRulesGrid.SelectedItem is null && _viewModel.UdpBlockRules.Count > 0)
+            {
+                UdpBlockRulesGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "请求重写")
+        {
+            if (RewriteRulesGrid.SelectedItem is null && _viewModel.RequestRewriteRules.Count > 0)
+            {
+                RewriteRulesGrid.SelectedIndex = 0;
+            }
+            return;
+        }
+
+        if (_currentPage == "请求映射"
+            && MappingRulesGrid.SelectedItem is null
+            && _viewModel.RequestMappingRules.Count > 0)
+        {
+            MappingRulesGrid.SelectedIndex = 0;
+            return;
+        }
+
+    }
+
+    private int GetRuleCount(string key)
+    {
+        return key switch
+        {
+            "替换列表" => _viewModel.ReplaceRuleItems.Count,
+            "拦截列表" => _viewModel.InterceptListItems.Count,
+            "请求断点" => _viewModel.InterceptRuleItems.Count,
+            "HTTP屏蔽" => _viewModel.RequestBlockRules.Count,
+            "WebSocket屏蔽" => _viewModel.WebSocketBlockRules.Count,
+            "TCP屏蔽" => _viewModel.TcpBlockRules.Count,
+            "UDP屏蔽" => _viewModel.UdpBlockRules.Count,
+            "请求重写" => _viewModel.RequestRewriteRules.Count,
+            "请求映射" => _viewModel.RequestMappingRules.Count,
+            _ => 0
+        };
+    }
+
+    private void AddCurrentRule_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        switch (_currentPage)
+        {
+            case "替换列表":
+                AddReplaceListRule();
+                break;
+            case "拦截列表":
+                AddInterceptListRule();
+                break;
+            case "请求断点":
+                AddBreakpointRule();
+                break;
+            case "HTTP屏蔽":
+                AddBlockRule();
+                break;
+            case "WebSocket屏蔽":
+                AddWebSocketBlockRule();
+                break;
+            case "TCP屏蔽":
+                AddTcpBlockRule();
+                break;
+            case "UDP屏蔽":
+                AddUdpBlockRule();
+                break;
+            case "请求重写":
+                AddRewriteRule();
+                break;
+            case "请求映射":
+                AddMappingRule();
+                break;
+        }
+    }
+
+    private void EditSelectedRule_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        if (GetSelectedRule() is null)
+        {
+            return;
+        }
+
+        EditSelectedRule();
+    }
+
+    private void RulesGrid_MouseDoubleClick(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+    {
+        if (GetSelectedRule() is null)
+        {
+            return;
+        }
+
+        EditSelectedRule();
+    }
+
+    private void RulesGrid_SelectionChanged(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
+    {
+        UpdateRuleActionButtons();
+    }
+
+    private async void RemoveSelectedRule_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        if (GetSelectedRule() is null)
+        {
+            return;
+        }
+
+        switch (_currentPage)
+        {
+            case "替换列表" when ReplaceListGrid.SelectedItem is ReplaceRuleItem replaceRule:
+                _viewModel.ReplaceRuleItems.Remove(replaceRule);
+                _viewModel.RefreshReplaceRuleIndexes();
+                await _viewModel.ApplyReplaceRulesAsync();
+                UpdateRuleCounts();
+                SelectFirstRuleIfNeeded();
+                UpdateRuleActionButtons();
+                return;
+            case "拦截列表" when InterceptListGrid.SelectedItem is InterceptListItem interceptItem:
+                await _viewModel.RemoveInterceptListItemAsync(interceptItem);
+                UpdateRuleCounts();
+                SelectFirstRuleIfNeeded();
+                UpdateRuleActionButtons();
+                return;
+            case "请求断点" when BreakpointRulesGrid.SelectedItem is InterceptRuleItem breakpointRule:
+                _viewModel.InterceptRuleItems.Remove(breakpointRule);
+                break;
+            case "HTTP屏蔽" when BlockRulesGrid.SelectedItem is RequestBlockRuleItem blockRule:
+                _viewModel.RequestBlockRules.Remove(blockRule);
+                break;
+            case "WebSocket屏蔽" when WebSocketBlockRulesGrid.SelectedItem is WebSocketBlockRuleItem webSocketBlockRule:
+                _viewModel.WebSocketBlockRules.Remove(webSocketBlockRule);
+                break;
+            case "TCP屏蔽" when TcpBlockRulesGrid.SelectedItem is TcpBlockRuleItem tcpBlockRule:
+                _viewModel.TcpBlockRules.Remove(tcpBlockRule);
+                break;
+            case "UDP屏蔽" when UdpBlockRulesGrid.SelectedItem is UdpBlockRuleItem udpBlockRule:
+                _viewModel.UdpBlockRules.Remove(udpBlockRule);
+                break;
+            case "请求重写" when RewriteRulesGrid.SelectedItem is RequestRewriteRuleItem rewriteRule:
+                _viewModel.RequestRewriteRules.Remove(rewriteRule);
+                break;
+            case "请求映射" when MappingRulesGrid.SelectedItem is RequestMappingRuleItem mappingRule:
+                _viewModel.RequestMappingRules.Remove(mappingRule);
+                break;
+            default:
+                return;
+        }
+
+        await SaveRulesAsync();
+        UpdateRuleCounts();
+        SelectFirstRuleIfNeeded();
+        UpdateRuleActionButtons();
+    }
+
+    private async void RuleEnableCheckBox_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        await SaveRulesAsync(showNotification: false);
+        UpdateRuleCounts();
+    }
+
+    private void AddBreakpointRule()
+    {
+        InterceptRuleItem item = new()
+        {
+            Name = "新请求断点",
+            Direction = "上行",
+            Target = "URL",
+            Operator = "包含",
+            Value = "",
+            State = "未保存"
+        };
+
+        ShowRuleEditor("请求断点", item, async () =>
+        {
+            _viewModel.InterceptRuleItems.Add(item);
+            BreakpointRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddBlockRule()
+    {
+        RequestBlockRuleItem item = new()
+        {
+            Name = "新HTTP屏蔽",
+            Method = "ANY",
+            UrlMatchType = "通配",
+            UrlPattern = "",
+            Action = "断开请求",
+            State = "未保存"
+        };
+
+        ShowRuleEditor("HTTP屏蔽", item, async () =>
+        {
+            _viewModel.RequestBlockRules.Add(item);
+            BlockRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddWebSocketBlockRule()
+    {
+        WebSocketBlockRuleItem item = new()
+        {
+            Name = "新WebSocket屏蔽",
+            Method = "ANY",
+            UrlMatchType = "通配",
+            UrlPattern = "",
+            Action = "断开连接",
+            State = "未保存"
+        };
+
+        ShowRuleEditor("WebSocket屏蔽", item, async () =>
+        {
+            _viewModel.WebSocketBlockRules.Add(item);
+            WebSocketBlockRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddTcpBlockRule()
+    {
+        TcpBlockRuleItem item = new()
+        {
+            Name = "新TCP屏蔽",
+            Method = "ANY",
+            UrlMatchType = "通配",
+            UrlPattern = "",
+            Action = "断开连接",
+            State = "未保存"
+        };
+
+        ShowRuleEditor("TCP屏蔽", item, async () =>
+        {
+            _viewModel.TcpBlockRules.Add(item);
+            TcpBlockRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddUdpBlockRule()
+    {
+        UdpBlockRuleItem item = new()
+        {
+            Name = "新UDP屏蔽",
+            Method = "UDP",
+            UrlMatchType = "通配",
+            UrlPattern = "",
+            Action = "丢弃上行包",
+            State = "未保存"
+        };
+
+        ShowRuleEditor("UDP屏蔽", item, async () =>
+        {
+            _viewModel.UdpBlockRules.Add(item);
+            UdpBlockRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddRewriteRule()
+    {
+        RequestRewriteRuleItem item = new()
+        {
+            Name = "新请求重写",
+            Method = "ANY",
+            UrlMatchType = "通配",
+            UrlPattern = "",
+            Direction = "请求",
+            Target = "协议头",
+            Operation = "设置",
+            ValueType = "String(UTF8)",
+            Priority = 100,
+            State = "未保存"
+        };
+
+        ShowRuleEditor("请求重写", item, async () =>
+        {
+            _viewModel.RequestRewriteRules.Add(item);
+            RewriteRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddMappingRule()
+    {
+        RequestMappingRuleItem item = new()
+        {
+            Name = "新请求映射",
+            Method = "ANY",
+            UrlMatchType = "通配",
+            UrlPattern = "",
+            MappingType = "本地文件",
+            ValueType = "String(UTF8)",
+            Priority = 100,
+            State = "未保存"
+        };
+
+        ShowRuleEditor("请求映射", item, async () =>
+        {
+            _viewModel.RequestMappingRules.Add(item);
+            MappingRulesGrid.SelectedItem = item;
+            await SaveRulesAsync();
+            UpdateRuleCounts();
+            UpdateRuleActionButtons();
+        });
+    }
+
+    private void AddReplaceListRule()
+    {
+        ReplaceRuleItem item = new();
+        ReplaceRuleEditorWindow editor = new(item, isNew: true) { Owner = this };
+        if (editor.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _ = SaveNewReplaceRuleAsync(item);
+    }
+
+    private async Task SaveNewReplaceRuleAsync(ReplaceRuleItem item)
+    {
+        _viewModel.ReplaceRuleItems.Add(item);
+        _viewModel.RefreshReplaceRuleIndexes();
+        await _viewModel.ApplyReplaceRulesAsync();
+        ReplaceListGrid.SelectedItem = item;
+        UpdateRuleCounts();
+        UpdateRuleActionButtons();
+    }
+
+    private void AddInterceptListRule()
+    {
+        InterceptRuleEditorWindow editor = new() { Owner = this };
+        if (editor.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _ = SaveNewInterceptRuleAsync(editor);
+    }
+
+    private async Task SaveNewInterceptRuleAsync(InterceptRuleEditorWindow editor)
+    {
+        await _viewModel.AddInterceptListRuleAsync(editor.Contains, editor.Target, editor.InterceptType, editor.SuspendProcess);
+        UpdateRuleCounts();
+        SelectFirstRuleIfNeeded();
+        UpdateRuleActionButtons();
+    }
+
+    private void EditSelectedRule()
+    {
+        switch (_currentPage)
+        {
+            case "替换列表" when ReplaceListGrid.SelectedItem is ReplaceRuleItem replaceRule:
+            {
+                ReplaceRuleEditorWindow editor = new(replaceRule, isNew: false) { Owner = this };
+                if (editor.ShowDialog() == true)
+                {
+                    _ = SaveEditedReplaceRuleAsync();
+                }
+
+                break;
+            }
+            case "拦截列表" when InterceptListGrid.SelectedItem is InterceptListItem interceptItem:
+            {
+                InterceptRuleEditorWindow editor = new(interceptItem.Contains, interceptItem.Target, interceptItem.InterceptType, interceptItem.SuspendProcess == "是")
+                {
+                    Owner = this
+                };
+                if (editor.ShowDialog() == true)
+                {
+                    _ = SaveEditedInterceptRuleAsync(interceptItem, editor);
+                }
+
+                break;
+            }
+            case "请求断点" when BreakpointRulesGrid.SelectedItem is InterceptRuleItem breakpointRule:
+            {
+                InterceptRuleItem editing = CloneBreakpointRule(breakpointRule);
+                ShowRuleEditor("请求断点", editing, async () =>
+                {
+                    ApplyBreakpointRule(breakpointRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+            case "HTTP屏蔽" when BlockRulesGrid.SelectedItem is RequestBlockRuleItem blockRule:
+            {
+                RequestBlockRuleItem editing = CloneBlockRule(blockRule);
+                ShowRuleEditor("HTTP屏蔽", editing, async () =>
+                {
+                    ApplyBlockRule(blockRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+            case "WebSocket屏蔽" when WebSocketBlockRulesGrid.SelectedItem is WebSocketBlockRuleItem webSocketBlockRule:
+            {
+                WebSocketBlockRuleItem editing = CloneWebSocketBlockRule(webSocketBlockRule);
+                ShowRuleEditor("WebSocket屏蔽", editing, async () =>
+                {
+                    ApplyWebSocketBlockRule(webSocketBlockRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+            case "TCP屏蔽" when TcpBlockRulesGrid.SelectedItem is TcpBlockRuleItem tcpBlockRule:
+            {
+                TcpBlockRuleItem editing = CloneTcpBlockRule(tcpBlockRule);
+                ShowRuleEditor("TCP屏蔽", editing, async () =>
+                {
+                    ApplyTcpBlockRule(tcpBlockRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+            case "UDP屏蔽" when UdpBlockRulesGrid.SelectedItem is UdpBlockRuleItem udpBlockRule:
+            {
+                UdpBlockRuleItem editing = CloneUdpBlockRule(udpBlockRule);
+                ShowRuleEditor("UDP屏蔽", editing, async () =>
+                {
+                    ApplyUdpBlockRule(udpBlockRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+            case "请求重写" when RewriteRulesGrid.SelectedItem is RequestRewriteRuleItem rewriteRule:
+            {
+                RequestRewriteRuleItem editing = CloneRewriteRule(rewriteRule);
+                ShowRuleEditor("请求重写", editing, async () =>
+                {
+                    ApplyRewriteRule(rewriteRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+            case "请求映射" when MappingRulesGrid.SelectedItem is RequestMappingRuleItem mappingRule:
+            {
+                RequestMappingRuleItem editing = CloneMappingRule(mappingRule);
+                ShowRuleEditor("请求映射", editing, async () =>
+                {
+                    ApplyMappingRule(mappingRule, editing);
+                    await SaveRulesAsync();
+                    UpdateRuleCounts();
+                    UpdateRuleActionButtons();
+                });
+                break;
+            }
+        }
+    }
+
+    private object? GetSelectedRule()
+    {
+        return _currentPage switch
+        {
+            "替换列表" => ReplaceListGrid.SelectedItem,
+            "拦截列表" => InterceptListGrid.SelectedItem,
+            "请求断点" => BreakpointRulesGrid.SelectedItem,
+            "HTTP屏蔽" => BlockRulesGrid.SelectedItem as TrafficRuleItemBase,
+            "WebSocket屏蔽" => WebSocketBlockRulesGrid.SelectedItem as TrafficRuleItemBase,
+            "TCP屏蔽" => TcpBlockRulesGrid.SelectedItem as TrafficRuleItemBase,
+            "UDP屏蔽" => UdpBlockRulesGrid.SelectedItem as TrafficRuleItemBase,
+            "请求重写" => RewriteRulesGrid.SelectedItem as TrafficRuleItemBase,
+            "请求映射" => MappingRulesGrid.SelectedItem as TrafficRuleItemBase,
+            _ => null
+        };
+    }
+
+    private int GetEnabledRuleCount(string key)
+    {
+        return key switch
+        {
+            "替换列表" => _viewModel.ReplaceRuleItems.Count,
+            "拦截列表" => _viewModel.InterceptListItems.Count,
+            "请求断点" => _viewModel.InterceptRuleItems.Count(static item => item.Enabled),
+            "HTTP屏蔽" => _viewModel.RequestBlockRules.Count(static item => item.Enabled),
+            "WebSocket屏蔽" => _viewModel.WebSocketBlockRules.Count(static item => item.Enabled),
+            "TCP屏蔽" => _viewModel.TcpBlockRules.Count(static item => item.Enabled),
+            "UDP屏蔽" => _viewModel.UdpBlockRules.Count(static item => item.Enabled),
+            "请求重写" => _viewModel.RequestRewriteRules.Count(static item => item.Enabled),
+            "请求映射" => _viewModel.RequestMappingRules.Count(static item => item.Enabled),
+            _ => 0
+        };
+    }
+
+    private int GetDirtyRuleCount(string key)
+    {
+        return key switch
+        {
+            "替换列表" => _viewModel.ReplaceRuleItems.Count(static item => item.State is not "已保存"),
+            "拦截列表" => _viewModel.InterceptListItems.Count(static item => item.State is not "已保存"),
+            "请求断点" => _viewModel.InterceptRuleItems.Count(static item => item.State is not "已保存"),
+            "HTTP屏蔽" => _viewModel.RequestBlockRules.Count(IsDirtyRule),
+            "WebSocket屏蔽" => _viewModel.WebSocketBlockRules.Count(IsDirtyRule),
+            "TCP屏蔽" => _viewModel.TcpBlockRules.Count(IsDirtyRule),
+            "UDP屏蔽" => _viewModel.UdpBlockRules.Count(IsDirtyRule),
+            "请求重写" => _viewModel.RequestRewriteRules.Count(IsDirtyRule),
+            "请求映射" => _viewModel.RequestMappingRules.Count(IsDirtyRule),
+            _ => 0
+        };
+    }
+
+    private static bool IsDirtyRule(TrafficRuleItemBase item)
+    {
+        return item.State is not "已保存" and not "兼容旧规则";
+    }
+
+    private void UpdateRuleActionButtons()
+    {
+        bool hasSelection = GetSelectedRule() is not null;
+        RemoveRuleButton.IsEnabled = hasSelection;
+        EditRuleButton.IsEnabled = hasSelection;
+    }
+
+    private async Task SaveEditedReplaceRuleAsync()
+    {
+        await _viewModel.ApplyReplaceRulesAsync();
+        _viewModel.RefreshReplaceRuleIndexes();
+        UpdateRuleCounts();
+        UpdateRuleActionButtons();
+    }
+
+    private async Task SaveEditedInterceptRuleAsync(InterceptListItem current, InterceptRuleEditorWindow editor)
+    {
+        await _viewModel.RemoveInterceptListItemAsync(current);
+        await _viewModel.AddInterceptListRuleAsync(editor.Contains, editor.Target, editor.InterceptType, editor.SuspendProcess);
+        UpdateRuleCounts();
+        SelectFirstRuleIfNeeded();
+        UpdateRuleActionButtons();
+    }
+
+    private void ShowRuleEditor(string ruleType, object rule, Func<Task> onAccepted)
+    {
+        RuleEditorWindow editor = new(ruleType, rule, ValidateRuleBeforeSave)
+        {
+            Owner = this
+        };
+        editor.RuleAccepted += async (_, _) =>
+        {
+            try
+            {
+                await onAccepted();
+            }
+            catch (Exception exception)
+            {
+                ShowRuleAlert(exception.Message);
+            }
+        };
+        editor.Show();
+        editor.Activate();
+    }
+
+    private string? ValidateRuleBeforeSave(object rule)
+    {
+        if (rule is InterceptRuleItem breakpointRule)
+        {
+            return ValidateUniqueBreakpointRule(breakpointRule, _viewModel.InterceptRuleItems);
+        }
+
+        if (rule is RequestBlockRuleItem blockRule)
+        {
+            return ValidateUniqueBlockRule(
+                blockRule,
+                _viewModel.RequestBlockRules,
+                "HTTP屏蔽");
+        }
+
+        if (rule is WebSocketBlockRuleItem webSocketBlockRule)
+        {
+            webSocketBlockRule.Method = "ANY";
+            return ValidateUniqueBlockRule(
+                webSocketBlockRule,
+                _viewModel.WebSocketBlockRules,
+                "WebSocket屏蔽");
+        }
+
+        if (rule is TcpBlockRuleItem tcpBlockRule)
+        {
+            return ValidateUniqueBlockRule(
+                tcpBlockRule,
+                _viewModel.TcpBlockRules,
+                "TCP屏蔽");
+        }
+
+        if (rule is UdpBlockRuleItem udpBlockRule)
+        {
+            udpBlockRule.Method = "UDP";
+            return ValidateUniqueBlockRule(
+                udpBlockRule,
+                _viewModel.UdpBlockRules,
+                "UDP屏蔽");
+        }
+
+        return null;
+    }
+
+    private static string? ValidateUniqueBreakpointRule(InterceptRuleItem rule, IEnumerable<InterceptRuleItem> rules)
+    {
+        if (rule is null)
+        {
+            return null;
+        }
+
+        string value = NormalizeRuleText(rule.Value);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "匹配值不能为空。";
+        }
+
+        string direction = NormalizeRuleText(rule.Direction);
+        string target = NormalizeRuleText(rule.Target);
+        string @operator = NormalizeRuleText(rule.Operator);
+        InterceptRuleItem? duplicate = rules.FirstOrDefault(existing =>
+            !string.Equals(existing.Hash, rule.Hash, StringComparison.Ordinal)
+            && string.Equals(NormalizeRuleText(existing.Direction), direction, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(NormalizeRuleText(existing.Target), target, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(NormalizeRuleText(existing.Operator), @operator, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(NormalizeRuleText(existing.Value), value, StringComparison.Ordinal));
+
+        if (duplicate is not null)
+        {
+            return $"已存在相同条件的请求断点：{duplicate.Name}";
+        }
+
+        return null;
+    }
+
+    private static string? ValidateUniqueBlockRule<T>(T rule, IEnumerable<T> rules, string ruleType)
+        where T : TrafficRuleItemBase
+    {
+        if (rule is null)
+        {
+            return null;
+        }
+
+        string url = NormalizeRuleText(rule.UrlPattern);
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return "Url 不能为空。";
+        }
+
+        string method = NormalizeRuleText(rule.Method);
+        string matchType = NormalizeRuleText(rule.UrlMatchType);
+        T? duplicate = rules.FirstOrDefault(existing =>
+            !string.Equals(existing.Hash, rule.Hash, StringComparison.Ordinal)
+            && string.Equals(NormalizeRuleText(existing.UrlPattern), url, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(NormalizeRuleText(existing.Method), method, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(NormalizeRuleText(existing.UrlMatchType), matchType, StringComparison.Ordinal));
+
+        if (duplicate is not null)
+        {
+            return $"已存在相同 Url 的 {ruleType}规则：{duplicate.Name}";
+        }
+
+        return null;
+    }
+
+    private static string NormalizeRuleText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
+    }
+
+    private static string NormalizeRulePageKey(string? value)
+    {
+        return value switch
+        {
+            "请求屏蔽" => "拦截列表",
+            "拦截规则" => "拦截列表",
+            "请求断点" => "拦截列表",
+            "HTTP屏蔽" => "拦截列表",
+            "WebSocket屏蔽" => "拦截列表",
+            "TCP屏蔽" => "拦截列表",
+            "UDP屏蔽" => "拦截列表",
+            "请求重写" => "替换列表",
+            "请求映射" => "替换列表",
+            _ => value ?? ""
+        };
+    }
+
+    private async Task SaveRulesAsync(bool showNotification = false)
+    {
+        try
+        {
+            if (_currentPage == "替换列表")
+            {
+                await _viewModel.ApplyReplaceRulesAsync();
+                return;
+            }
+
+            if (_currentPage == "拦截列表")
+            {
+                await _viewModel.ApplyInterceptRulesAsync(showNotification);
+                bool interceptSaved = await _viewModel.ApplyRuleCenterConfigAsync(showNotification);
+                _viewModel.RefreshInterceptListItems();
+                if (!interceptSaved)
+                {
+                    ShowRuleAlert("拦截规则保存失败。");
+                }
+
+                return;
+            }
+
+            if (_currentPage == "请求断点")
+            {
+                await _viewModel.ApplyInterceptRulesAsync(showNotification);
+                if (_viewModel.InterceptRuleItems.Any(static item => item.State == "保存失败"))
+                {
+                    ShowRuleAlert("请求断点保存失败，请检查规则。");
+                }
+                return;
+            }
+
+            bool saved = await _viewModel.ApplyRuleCenterConfigAsync(showNotification);
+            if (!saved)
+            {
+                ShowRuleAlert("规则中心配置保存失败。");
+            }
+        }
+        catch (Exception exception)
+        {
+            ShowRuleAlert(exception.Message);
+        }
+    }
+
+    private void ShowRuleAlert(string message)
+    {
+        RuleAlertTextBlock.Text = message;
+        RuleAlertBorder.Visibility = Visibility.Visible;
+        _alertTimer.Stop();
+        _alertTimer.Start();
+    }
+
+    private static InterceptRuleItem CloneBreakpointRule(InterceptRuleItem source)
+    {
+        InterceptRuleItem clone = new();
+        ApplyBreakpointRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyBreakpointRule(InterceptRuleItem target, InterceptRuleItem source)
+    {
+        target.Hash = source.Hash;
+        target.Enabled = source.Enabled;
+        target.Name = source.Name;
+        target.Direction = source.Direction;
+        target.Target = source.Target;
+        target.Operator = source.Operator;
+        target.Value = source.Value;
+        target.Note = source.Note;
+    }
+
+    private void HideRuleAlert()
+    {
+        _alertTimer.Stop();
+        RuleAlertBorder.Visibility = Visibility.Collapsed;
+    }
+
+    private void AlertTimer_Tick(object? sender, EventArgs eventArgs)
+    {
+        HideRuleAlert();
+    }
+
+    private static RequestBlockRuleItem CloneBlockRule(RequestBlockRuleItem source)
+    {
+        RequestBlockRuleItem clone = new();
+        ApplyBlockRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyBlockRule(RequestBlockRuleItem target, RequestBlockRuleItem source)
+    {
+        ApplyCommonRuleFields(target, source);
+        target.Action = source.Action;
+    }
+
+    private static WebSocketBlockRuleItem CloneWebSocketBlockRule(WebSocketBlockRuleItem source)
+    {
+        WebSocketBlockRuleItem clone = new();
+        ApplyWebSocketBlockRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyWebSocketBlockRule(WebSocketBlockRuleItem target, WebSocketBlockRuleItem source)
+    {
+        ApplyCommonRuleFields(target, source);
+        target.Method = "ANY";
+        target.Action = source.Action;
+    }
+
+    private static TcpBlockRuleItem CloneTcpBlockRule(TcpBlockRuleItem source)
+    {
+        TcpBlockRuleItem clone = new();
+        ApplyTcpBlockRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyTcpBlockRule(TcpBlockRuleItem target, TcpBlockRuleItem source)
+    {
+        ApplyCommonRuleFields(target, source);
+        target.Action = source.Action;
+    }
+
+    private static UdpBlockRuleItem CloneUdpBlockRule(UdpBlockRuleItem source)
+    {
+        UdpBlockRuleItem clone = new();
+        ApplyUdpBlockRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyUdpBlockRule(UdpBlockRuleItem target, UdpBlockRuleItem source)
+    {
+        ApplyCommonRuleFields(target, source);
+        target.Method = "UDP";
+        target.Action = source.Action;
+    }
+
+    private static RequestRewriteRuleItem CloneRewriteRule(RequestRewriteRuleItem source)
+    {
+        source.SyncOperationsJson();
+        RequestRewriteRuleItem clone = new();
+        ApplyRewriteRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyRewriteRule(RequestRewriteRuleItem target, RequestRewriteRuleItem source)
+    {
+        ApplyCommonRuleFields(target, source);
+        target.Direction = source.Direction;
+        target.Target = source.Target;
+        target.Operation = source.Operation;
+        target.Key = source.Key;
+        target.Value = source.Value;
+        target.ValueType = source.ValueType;
+        target.OperationsJson = source.OperationsJson;
+        target.LoadOperationsFromJson();
+    }
+
+    private static RequestMappingRuleItem CloneMappingRule(RequestMappingRuleItem source)
+    {
+        RequestMappingRuleItem clone = new();
+        ApplyMappingRule(clone, source);
+        clone.State = source.State;
+        return clone;
+    }
+
+    private static void ApplyMappingRule(RequestMappingRuleItem target, RequestMappingRuleItem source)
+    {
+        ApplyCommonRuleFields(target, source);
+        target.MappingType = source.MappingType;
+        target.SourceContent = source.SourceContent;
+        target.TargetContent = source.TargetContent;
+        target.ValueType = source.ValueType;
+        target.LegacyReplaceRule = source.LegacyReplaceRule;
+    }
+
+    private static void ApplyCommonRuleFields(TrafficRuleItemBase target, TrafficRuleItemBase source)
+    {
+        target.Hash = source.Hash;
+        target.Enabled = source.Enabled;
+        target.Name = source.Name;
+        target.Method = source.Method;
+        target.UrlMatchType = source.UrlMatchType;
+        target.UrlPattern = source.UrlPattern;
+        target.Priority = source.Priority;
+        target.Note = source.Note;
+    }
+
+    private sealed record RulePageInfo(string Title, string Placeholder);
+}
