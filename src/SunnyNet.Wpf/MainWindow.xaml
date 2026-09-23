@@ -80,7 +80,7 @@
             <Setter Property="Padding" Value="8,0" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="BorderBrush" Value="#DCE5F1" />
             <Setter Property="ToolTip" Value="输入关键词高亮匹配，Enter 查找下一个" />
         </Style>
@@ -174,14 +174,11 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border x:Name="LanIpIconBorder"
-                                Width="30"
+                        <Border Width="30"
                                 Height="30"
                                 CornerRadius="6"
                                 Background="{StaticResource AccentSoftBrush}"
-                                Cursor="Hand"
-                                MouseEnter="LanIpIconBorder_MouseEnter"
-                                MouseLeftButtonDown="LanIpIconBorder_MouseLeftButtonDown">
+                                IsHitTestVisible="False">
                             <TextBlock HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        FontFamily="Segoe MDL2 Assets"
@@ -189,14 +186,14 @@
                                        Text="&#xE774;" />
                         </Border>
                         <primitives:Popup x:Name="LanIpPopup"
-                               AllowsTransparency="True"
-                               Placement="Bottom"
-                               PlacementTarget="{Binding ElementName=LanIpIconBorder}"
-                               PopupAnimation="Fade"
-                               StaysOpen="False">
+                                         AllowsTransparency="True"
+                                         Placement="Bottom"
+                                         PlacementTarget="{Binding ElementName=LanIpToolbarButton}"
+                                         PopupAnimation="Fade"
+                                         StaysOpen="False">
                             <Border Width="198"
                                     Padding="20,18"
-                                    Background="White"
+                                    Background="#F0F0F0"
                                     BorderBrush="#DDE7F2"
                                     BorderThickness="1"
                                     CornerRadius="4">
@@ -298,7 +295,6 @@
                                     <MenuItem Header="清除失败请求" Tag="Failed" Click="ClearSessionsByRule_Click" />
                                     <MenuItem Header="清除重定向" Tag="Redirect" Click="ClearSessionsByRule_Click" />
                                     <Separator />
-                                    <MenuItem Header="清除未收藏" Tag="Unfavorite" Click="ClearSessionsByRule_Click" />
                                     <MenuItem Header="清除未标记" Tag="Untagged" Click="ClearSessionsByRule_Click" />
                                     <MenuItem Header="清除当前筛选结果" Tag="CurrentFilter" Click="ClearSessionsByRule_Click" />
                                     <Separator />
@@ -312,8 +308,6 @@
                                 </StackPanel>
                             </Button>
 
-                            <Border Width="1" Margin="10,6" Background="{StaticResource DividerBrush}" />
-
                             <ToggleButton x:Name="AutoScrollToolbarButton"
                                           Margin="6,0,0,0"
                                           Style="{StaticResource ToolbarToggleButtonStyle}"
@@ -325,10 +319,7 @@
                                     <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="自动滚动显示" />
                                 </StackPanel>
                             </ToggleButton>
-
-                            <Border Width="1" Margin="10,6" Background="{StaticResource DividerBrush}" />
-
-                            <Button Style="{StaticResource ToolbarButtonStyle}" Click="TextCompare_Click" ToolTip="文本工具">
+                            <Button Margin="6,0,0,0" Style="{StaticResource ToolbarButtonStyle}" Click="TextCompare_Click" ToolTip="文本工具">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE8D2;" />
                                     <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="文本工具" />
@@ -368,6 +359,15 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE82D;" />
                                     <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="开源协议" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="LanIpToolbarButton"
+                                    Margin="6,0,0,0"
+                                    Style="{StaticResource ToolbarButtonStyle}"
+                                    Click="LanIpToolbarButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource GlyphTextStyle}" Text="&#xE774;" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="显示内网" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -430,7 +430,7 @@
                             <Setter Property="FontSize" Value="12" />
                             <Setter Property="Foreground" Value="#6F7F93" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding ShowFavoritesOnly}" Value="True">
+                                <DataTrigger Binding="{Binding ShowTaggedOnly}" Value="True">
                                     <Setter Property="Foreground" Value="#143A28" />
                                     <Setter Property="FontWeight" Value="SemiBold" />
                                 </DataTrigger>
@@ -440,7 +440,7 @@
                             <Setter Property="FontSize" Value="13" />
                             <Setter Property="Foreground" Value="#D8A900" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding ShowFavoritesOnly}" Value="True">
+                                <DataTrigger Binding="{Binding ShowTaggedOnly}" Value="True">
                                     <Setter Property="Foreground" Value="#0F6B3C" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -637,41 +637,6 @@
                                            Text="{Binding Name}" />
                             </Grid>
                         </DataTemplate>
-                        <Style x:Key="FavoriteCellButtonStyle" TargetType="{x:Type Button}">
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="BorderBrush" Value="Transparent" />
-                            <Setter Property="BorderThickness" Value="0" />
-                            <Setter Property="Width" Value="22" />
-                            <Setter Property="Height" Value="22" />
-                            <Setter Property="Padding" Value="0" />
-                            <Setter Property="Cursor" Value="Hand" />
-                            <Setter Property="Focusable" Value="False" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="{x:Type Button}">
-                                        <Border x:Name="FavoriteButtonBorder"
-                                                Width="{TemplateBinding Width}"
-                                                Height="{TemplateBinding Height}"
-                                                Background="Transparent"
-                                                CornerRadius="11">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="FavoriteButtonBorder" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
-                                            </Trigger>
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="FavoriteButtonBorder" Property="Background" Value="{StaticResource AccentSoftBrush}" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                        <Style x:Key="SessionFavoriteHeaderStyle" TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
-                            <Setter Property="Padding" Value="0,5" />
-                        </Style>
                     </Border.Resources>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -757,14 +722,15 @@
                                     <DockPanel Grid.Row="1" Margin="0,0,0,2" LastChildFill="False">
                                         <ToggleButton DockPanel.Dock="Right"
                                                       Style="{StaticResource FavoritesOnlyToggleStyle}"
-                                                      IsChecked="{Binding ShowFavoritesOnly, Mode=TwoWay}"
-                                                      Click="FavoritesOnlyToggleButton_Click">
+                                                      IsChecked="{Binding ShowTaggedOnly, Mode=TwoWay}"
+                                                      Click="TaggedOnlyToggleButton_Click"
+                                                      ToolTip="只显示已标记颜色的会话">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Style="{StaticResource FavoritesOnlyStarStyle}"
-                                                           Text="★" />
+                                                           Text="●" />
                                                 <TextBlock Margin="4,0,0,0"
                                                            Style="{StaticResource FavoritesOnlyTextStyle}"
-                                                           Text="仅看收藏" />
+                                                           Text="仅看标记" />
                                             </StackPanel>
                                         </ToggleButton>
                                     </DockPanel>
@@ -884,6 +850,8 @@
                                       RowHeight="26"
                                       ColumnHeaderHeight="30"
                                       FontSize="12"
+                                      GridLinesVisibility="None"
+                                      SnapsToDevicePixels="True"
                                       ItemsSource="{Binding SessionsView}"
                                       SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
                                       AutoGenerateColumns="False"
@@ -939,7 +907,6 @@
                                             </MenuItem>
                                             <MenuItem Header="火山 WinHttpW" Tag="火山|WinHttpW" Click="GenerateRequestCode_Click" />
                                         </MenuItem>
-                                        <MenuItem x:Name="FavoriteSelectedSessionsMenuItem" Header="标记收藏" Click="FavoriteSelectedSessions_Click" />
                                         <MenuItem x:Name="MarkColorSelectedSessionsMenuItem" Header="标记颜色">
                                             <MenuItem Header="删除线" InputGestureText="Minus" Tag="__strike__" Click="MarkSelectedSessions_Click" />
                                             <Separator />
@@ -1019,18 +986,40 @@
                                     </ContextMenu>
                                 </DataGrid.ContextMenu>
                                 <DataGrid.Resources>
-                                    <Style x:Key="SessionGridCellStyle" TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#B5D0F5" />
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#0D3B66" />
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#B5D0F5" />
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#0D3B66" />
+                                    <Style x:Key="SessionGridCellStyle" TargetType="{x:Type DataGridCell}">
                                         <Setter Property="Padding" Value="8,2" />
                                         <Setter Property="MinHeight" Value="26" />
                                         <Setter Property="VerticalContentAlignment" Value="Center" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="BorderBrush" Value="Transparent" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderThickness="0"
+                                                            Padding="{TemplateBinding Padding}"
+                                                            SnapsToDevicePixels="True">
+                                                        <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                         <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#B5D0F5" />
+                                                <Setter Property="Foreground" Value="#0D3B66" />
+                                            </Trigger>
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
                                                     <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
                                                     <Condition Binding="{Binding DataContext.IsIntercepted, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True" />
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Background" Value="#FFB35F" />
-                                                <Setter Property="BorderBrush" Value="#FF6A00" />
                                                 <Setter Property="Foreground" Value="#1F2937" />
                                             </MultiDataTrigger>
                                             <MultiDataTrigger>
@@ -1039,7 +1028,6 @@
                                                     <Condition Binding="{Binding DataContext.HasBlockRuleHits, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True" />
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Background" Value="#FFD1AD" />
-                                                <Setter Property="BorderBrush" Value="#F05A24" />
                                                 <Setter Property="Foreground" Value="#7C2D12" />
                                             </MultiDataTrigger>
                                         </Style.Triggers>
@@ -1102,15 +1090,20 @@
                                         <Setter Property="Background" Value="{Binding RowBackground}" />
                                         <Setter Property="ToolTip" Value="{Binding RuleHitSummary}" />
                                         <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="BorderBrush" Value="Transparent" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                                         <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#B5D0F5" />
+                                                <Setter Property="Foreground" Value="#0D3B66" />
+                                            </Trigger>
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
                                                     <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
                                                     <Condition Binding="{Binding IsIntercepted}" Value="True" />
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Background" Value="#FFB35F" />
-                                                <Setter Property="BorderBrush" Value="#FF6A00" />
-                                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                                <Setter Property="Foreground" Value="#1F2937" />
                                             </MultiDataTrigger>
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
@@ -1118,8 +1111,7 @@
                                                     <Condition Binding="{Binding HasBlockRuleHits}" Value="True" />
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Background" Value="#FFD1AD" />
-                                                <Setter Property="BorderBrush" Value="#F05A24" />
-                                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                                <Setter Property="Foreground" Value="#7C2D12" />
                                             </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -1146,32 +1138,13 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn x:Name="FavoriteColumn"
-                                                            Header="★"
-                                                            Width="42"
-                                                            SortMemberPath="IsFavorite"
-                                                            IsReadOnly="True"
-                                                            HeaderStyle="{StaticResource SessionFavoriteHeaderStyle}">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Style="{StaticResource FavoriteCellButtonStyle}"
-                                                        Click="FavoriteSession_Click"
-                                                        ToolTip="{Binding FavoriteToolTip}">
-                                                    <TextBlock FontSize="15"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="{Binding FavoriteBrush}"
-                                                               Text="{Binding FavoriteGlyph}" />
-                                                </Button>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTextColumn x:Name="MethodColumn" Header="方式" Binding="{Binding DisplayMethod}" Width="62" DisplayIndex="2" IsReadOnly="True" ElementStyle="{StaticResource SessionMethodTextStyle}" />
-                                    <DataGridTextColumn x:Name="UrlColumn" Header="URL" Binding="{Binding Url}" Width="4*" DisplayIndex="3" IsReadOnly="True" ElementStyle="{StaticResource SessionUrlTextCellTextStyle}" />
-                                    <DataGridTextColumn x:Name="StateColumn" Header="状态" Binding="{Binding State}" Width="68" DisplayIndex="4" IsReadOnly="True" ElementStyle="{StaticResource SessionStateTextStyle}" />
-                                    <DataGridTextColumn x:Name="LengthColumn" Header="长度" Binding="{Binding ResponseLength}" Width="96" DisplayIndex="5" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
-                                    <DataGridTextColumn x:Name="TypeColumn" Header="类型" Binding="{Binding ResponseType}" Width="104" DisplayIndex="6" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
-                                    <DataGridTextColumn x:Name="NotesColumn" Header="备注" Binding="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Width="140" DisplayIndex="7" ElementStyle="{StaticResource SessionTextCellTextStyle}" EditingElementStyle="{StaticResource SessionNotesEditingStyle}" />
-                                    <DataGridTextColumn x:Name="ProcessColumn" Header="进程" Binding="{Binding Process}" Width="92" DisplayIndex="8" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="MethodColumn" Header="方式" Binding="{Binding DisplayMethod}" Width="62" IsReadOnly="True" ElementStyle="{StaticResource SessionMethodTextStyle}" />
+                                    <DataGridTextColumn x:Name="UrlColumn" Header="URL" Binding="{Binding Url}" Width="4*" IsReadOnly="True" ElementStyle="{StaticResource SessionUrlTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="StateColumn" Header="状态" Binding="{Binding State}" Width="68" IsReadOnly="True" ElementStyle="{StaticResource SessionStateTextStyle}" />
+                                    <DataGridTextColumn x:Name="LengthColumn" Header="长度" Binding="{Binding ResponseLength}" Width="96" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="TypeColumn" Header="类型" Binding="{Binding ResponseType}" Width="104" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
+                                    <DataGridTextColumn x:Name="NotesColumn" Header="备注" Binding="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Width="140" ElementStyle="{StaticResource SessionTextCellTextStyle}" EditingElementStyle="{StaticResource SessionNotesEditingStyle}" />
+                                    <DataGridTextColumn x:Name="ProcessColumn" Header="进程" Binding="{Binding Process}" Width="92" IsReadOnly="True" ElementStyle="{StaticResource SessionTextCellTextStyle}" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
@@ -2015,7 +1988,7 @@
                             <Border Width="560"
                                     Height="300"
                                     Padding="12,10"
-                                    Background="#FFFFFF"
+                                    Background="#F0F0F0"
                                     BorderBrush="#D8DEE8"
                                     BorderThickness="1"
                                     CornerRadius="6">

@@ -165,7 +165,7 @@
                                 Padding="10"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Top"
-                                Background="White"
+                                Background="#F0F0F0"
                                 CornerRadius="10">
                             <Grid Width="190" Height="226">
                                 <Image x:Name="SponsorImage"

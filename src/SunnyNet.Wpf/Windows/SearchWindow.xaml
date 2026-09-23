@@ -56,7 +56,7 @@
 
     <Grid>
         <Border Margin="18"
-                Background="#FFFFFF"
+                Background="#F0F0F0"
                 BorderBrush="#DCE5F1"
                 BorderThickness="1"
                 CornerRadius="8">

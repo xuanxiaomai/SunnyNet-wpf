@@ -75,7 +75,7 @@
                 </ScrollViewer>
 
                 <Border x:Name="EmptyPanel"
-                        Background="#F8FAFD"
+                        Background="#F0F0F0"
                         IsHitTestVisible="False">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock HorizontalAlignment="Center"

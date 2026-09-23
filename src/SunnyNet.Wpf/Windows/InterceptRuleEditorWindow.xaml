@@ -6,7 +6,7 @@
         Height="280"
         MinWidth="480"
         MinHeight="240"
-        Background="#FFFFFF"
+        Background="#F0F0F0"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="18">
         <Grid.RowDefinitions>

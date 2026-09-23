@@ -82,20 +82,16 @@ public partial class MainWindow : Window
         LanIpItemsControl.ItemsSource = addresses.Length == 0 ? new[] { "未检测到" } : addresses;
     }
 
-    private void LanIpIconBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+    private void LanIpToolbarButton_Click(object sender, RoutedEventArgs routedEventArgs)
     {
-        ShowLanIpPopup();
-        mouseButtonEventArgs.Handled = true;
-    }
+        if (LanIpPopup.IsOpen)
+        {
+            LanIpPopup.IsOpen = false;
+            return;
+        }
 
-    private void LanIpIconBorder_MouseEnter(object sender, MouseEventArgs mouseEventArgs)
-    {
-        ShowLanIpPopup();
-    }
-
-    private void ShowLanIpPopup()
-    {
         UpdateLanIpPopupItems();
+        LanIpPopup.PlacementTarget = LanIpToolbarButton;
         LanIpPopup.IsOpen = true;
     }
 
@@ -1203,9 +1199,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (IsKeyboardFocusWithinSessionsGrid()
-            && !IsTextEditorFocused()
-            && TryResolveSessionMarkShortcut(keyEventArgs, out string tagColor))
+        if (!IsEditableTextInputFocused()
+            && TryResolveSessionMarkShortcut(keyEventArgs, out string tagColor)
+            && GetSelectedSessionEntries().Length > 0)
         {
             _ = ApplySessionMarkAsync(tagColor);
             keyEventArgs.Handled = true;
@@ -1502,7 +1498,8 @@ public partial class MainWindow : Window
 
     private void ApplySavedFavoriteSettings()
     {
-        _viewModel.InitializeFavoriteSettings(_layoutSettings.FavoriteSessionKeys, _layoutSettings.ShowFavoritesOnly);
+        _viewModel.InitializeFavoriteSettings(_layoutSettings.FavoriteSessionKeys);
+        _viewModel.ShowTaggedOnly = _layoutSettings.ShowTaggedOnly;
     }
 
     private void ApplySavedProcessCaptureSettings()
@@ -1541,7 +1538,8 @@ public partial class MainWindow : Window
             SaveSessionColumnWidth(key, column);
         }
 
-        _layoutSettings.ShowFavoritesOnly = _viewModel.ShowFavoritesOnly;
+        _layoutSettings.ShowTaggedOnly = _viewModel.ShowTaggedOnly;
+        _layoutSettings.ShowFavoritesOnly = false;
         _layoutSettings.FavoriteSessionKeys = _viewModel.GetFavoriteKeys().ToList();
         _layoutSettings.ProcessCaptureNames = _viewModel.GetProcessCaptureNameSettings().ToList();
         UiLayoutSettingsStore.Save(_layoutSettings);
@@ -1606,7 +1604,8 @@ public partial class MainWindow : Window
 
     private void SaveFavoriteSettings()
     {
-        _layoutSettings.ShowFavoritesOnly = _viewModel.ShowFavoritesOnly;
+        _layoutSettings.ShowTaggedOnly = _viewModel.ShowTaggedOnly;
+        _layoutSettings.ShowFavoritesOnly = false;
         _layoutSettings.FavoriteSessionKeys = _viewModel.GetFavoriteKeys().ToList();
         UiLayoutSettingsStore.Save(_layoutSettings);
     }
@@ -1698,7 +1697,6 @@ public partial class MainWindow : Window
         return new Dictionary<string, DataGridColumn>
         {
             ["Index"] = IndexColumn,
-            ["Favorite"] = FavoriteColumn,
             ["Method"] = MethodColumn,
             ["Url"] = UrlColumn,
             ["State"] = StateColumn,
@@ -1942,10 +1940,6 @@ public partial class MainWindow : Window
 
         CopySelectedSessionsMenuItem.IsEnabled = hasSelection;
         GenerateCodeSessionsMenuItem.IsEnabled = isHttpSelection;
-        FavoriteSelectedSessionsMenuItem.IsEnabled = hasSelection;
-        FavoriteSelectedSessionsMenuItem.Header = hasSelection && entries.All(static entry => entry.IsFavorite)
-            ? "取消收藏"
-            : "标记收藏";
         MarkColorSelectedSessionsMenuItem.IsEnabled = hasSelection;
         EditNotesSessionsMenuItem.IsEnabled = hasSelection;
         EditNotesSessionsMenuItem.Header = entries.Length > 1 ? $"编辑备注 ({entries.Length})..." : "编辑备注...";
@@ -2140,26 +2134,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void FavoriteSelectedSessions_Click(object sender, RoutedEventArgs routedEventArgs)
-    {
-        CaptureEntry[] entries = GetSelectedSessionEntries();
-        if (entries.Length == 0)
-        {
-            return;
-        }
-
-        bool shouldFavorite = !entries.All(static entry => entry.IsFavorite);
-        foreach (CaptureEntry entry in entries)
-        {
-            if (entry.IsFavorite != shouldFavorite)
-            {
-                _viewModel.ToggleFavorite(entry);
-            }
-        }
-
-        SaveFavoriteSettings();
-    }
-
     private async void MarkSelectedSessions_Click(object sender, RoutedEventArgs routedEventArgs)
     {
         string tagColor = sender is MenuItem menuItem ? menuItem.Tag?.ToString() ?? "" : "";
@@ -2241,9 +2215,13 @@ public partial class MainWindow : Window
     private void FilterSelectedSessionsByMethod_Click(object sender, RoutedEventArgs routedEventArgs)
     {
         string[] keys = GetSelectedSessionEntries()
-            .Select(static entry => NormalizeMenuFilterValue(entry.Method, "未知方法"))
+            .Select(static entry => NormalizeMenuFilterValue(entry.DisplayMethod, "未知方法"))
             .Where(static key => !string.IsNullOrWhiteSpace(key))
-            .Select(static key => key.Equals("Websocket", StringComparison.OrdinalIgnoreCase) ? "WebSocket" : key)
+            .Select(static key => key.Equals("WS", StringComparison.OrdinalIgnoreCase)
+                || key.Equals("WSS", StringComparison.OrdinalIgnoreCase)
+                || key.Equals("Websocket", StringComparison.OrdinalIgnoreCase)
+                    ? "WebSocket"
+                    : key)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
@@ -2357,17 +2335,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void FavoriteSession_Click(object sender, RoutedEventArgs routedEventArgs)
-    {
-        if (sender is not FrameworkElement { DataContext: CaptureEntry entry })
-        {
-            return;
-        }
-
-        _viewModel.ToggleFavorite(entry);
-        SaveFavoriteSettings();
-    }
-
     private CaptureEntry[] GetSelectedSessionEntries()
     {
         CaptureEntry[] entries = SessionsGrid.SelectedItems
@@ -2437,6 +2404,17 @@ public partial class MainWindow : Window
         return Keyboard.FocusedElement is TextBoxBase
             or PasswordBox
             or ComboBox { IsEditable: true };
+    }
+
+    private static bool IsEditableTextInputFocused()
+    {
+        return Keyboard.FocusedElement switch
+        {
+            TextBox { IsReadOnly: false } => true,
+            PasswordBox => true,
+            ComboBox { IsEditable: true } => true,
+            _ => false
+        };
     }
 
     private static bool TryResolveSessionMarkShortcut(KeyEventArgs keyEventArgs, out string tagColor)
@@ -2615,7 +2593,7 @@ public partial class MainWindow : Window
         return null;
     }
 
-    private void FavoritesOnlyToggleButton_Click(object sender, RoutedEventArgs routedEventArgs)
+    private void TaggedOnlyToggleButton_Click(object sender, RoutedEventArgs routedEventArgs)
     {
         SaveFavoriteSettings();
     }
@@ -2671,9 +2649,12 @@ public partial class MainWindow : Window
             return;
         }
 
-        _viewModel.SetSelectedMethodFilters(MethodFilterListBox.SelectedItems
-            .OfType<SessionFilterItem>()
-            .Select(static item => item.Key));
+        IEnumerable<string> keys = routedEventArgs.AddedItems.OfType<SessionFilterItem>().Any()
+            && (Keyboard.Modifiers & ModifierKeys.Control) == 0
+            ? routedEventArgs.AddedItems.OfType<SessionFilterItem>().Select(static item => item.Key)
+            : MethodFilterListBox.SelectedItems.OfType<SessionFilterItem>().Select(static item => item.Key);
+
+        _viewModel.SetSelectedMethodFilters(keys);
     }
 
     private async void MethodFilterListBox_PreviewKeyDown(object sender, KeyEventArgs keyEventArgs)

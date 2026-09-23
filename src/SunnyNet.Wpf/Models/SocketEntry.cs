@@ -7,6 +7,7 @@ namespace SunnyNet.Wpf.Models;
 
 public sealed class SocketEntry : ViewModelBase
 {
+    private static readonly Brush DefaultCardBackgroundBrush = CreateDefaultCardBackground();
     private int _index;
     private int _theology;
     private string _data = "";
@@ -257,7 +258,7 @@ public sealed class SocketEntry : ViewModelBase
     public bool HasSearchHighlight => !string.IsNullOrWhiteSpace(SearchColor);
 
     [JsonIgnore]
-    public Brush CardBackground => CreateSearchBrush(SearchColor, Brushes.White, 0.34);
+    public Brush CardBackground => CreateSearchBrush(SearchColor, DefaultCardBackgroundBrush, 0.34);
 
     [JsonIgnore]
     public Brush SearchBorderBrush => CreateSearchBrush(SearchColor, new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE4, 0xEB, 0xF5)), 0.7);
@@ -288,6 +289,13 @@ public sealed class SocketEntry : ViewModelBase
         OnPropertyChanged(nameof(HasSearchHighlight));
         OnPropertyChanged(nameof(CardBackground));
         OnPropertyChanged(nameof(SearchBorderBrush));
+    }
+
+    private static Brush CreateDefaultCardBackground()
+    {
+        SolidColorBrush brush = new(System.Windows.Media.Color.FromRgb(0xF0, 0xF0, 0xF0));
+        brush.Freeze();
+        return brush;
     }
 
     private static Brush CreateSearchBrush(string color, Brush fallback, double opacity)

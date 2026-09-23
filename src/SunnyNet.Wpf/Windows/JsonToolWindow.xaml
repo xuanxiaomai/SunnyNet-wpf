@@ -19,7 +19,7 @@
         </Style>
 
         <Style x:Key="JsonCardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="BorderBrush" Value="#DDE7F2" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="10" />
@@ -174,8 +174,8 @@
                             <TextBlock x:Name="JsonParseStatusTextBlock" Margin="0,3,0,0" Style="{StaticResource JsonSubtitleTextStyle}" Text="输入 JSON 后可格式化或解析到右侧结构。" />
                         </StackPanel>
                     </DockPanel>
-                    <Border Grid.Row="1" Margin="12,0,12,12" BorderBrush="#DDE7F2" BorderThickness="1" CornerRadius="8" Background="White">
-                        <TextBox x:Name="JsonInputTextBox" Margin="10" AcceptsReturn="True" Background="White" BorderThickness="0" Foreground="#1F2D3D" CaretBrush="#1E50C8" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" FontSize="13" TextWrapping="Wrap" />
+                    <Border Grid.Row="1" Margin="12,0,12,12" BorderBrush="#DDE7F2" BorderThickness="1" CornerRadius="8" Background="#F0F0F0">
+                        <TextBox x:Name="JsonInputTextBox" Margin="10" AcceptsReturn="True" Background="#F0F0F0" BorderThickness="0" Foreground="#1F2D3D" CaretBrush="#1E50C8" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" FontSize="13" TextWrapping="Wrap" />
                     </Border>
                 </Grid>
             </Border>
@@ -199,7 +199,7 @@
                         <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#1F2D3D" Text="JSON 结构编辑器" />
                     </DockPanel>
 
-                    <Border Grid.Row="1" Margin="12,0,12,12" BorderBrush="#DDE7F2" BorderThickness="1" CornerRadius="8" Background="White">
+                    <Border Grid.Row="1" Margin="12,0,12,12" BorderBrush="#DDE7F2" BorderThickness="1" CornerRadius="8" Background="#F0F0F0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="32" />
@@ -219,7 +219,7 @@
                                      Grid.Row="1"
                                      Margin="6,0,6,8"
                                      BorderThickness="0"
-                                     Background="White"
+                                     Background="#F0F0F0"
                                      ItemContainerStyle="{StaticResource JsonNodeRowStyle}"
                                      AllowDrop="True"
                                      SelectionChanged="JsonNodeListBox_SelectionChanged"

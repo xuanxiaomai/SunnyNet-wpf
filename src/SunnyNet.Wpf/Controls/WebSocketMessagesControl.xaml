@@ -9,8 +9,11 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -18,7 +21,8 @@
                                 Padding="0"
                                 Background="Transparent"
                                 BorderBrush="Transparent"
-                                BorderThickness="0">
+                                BorderThickness="0"
+                                SnapsToDevicePixels="True">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -26,9 +30,7 @@
                                 <Setter TargetName="ItemBorder" Property="Background" Value="#F7FAFE" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#EEF4FF" />
-                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#D7E4FB" />
-                                <Setter TargetName="ItemBorder" Property="BorderThickness" Value="0" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#B5D0F5" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -48,6 +50,11 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter Property="Foreground" Value="#0D3B66" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="WebSocketFlowMonoCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource WebSocketFlowCellTextStyle}">
@@ -636,7 +643,7 @@
                                     <ColumnDefinition Width="82" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="#" />
+                                <TextBlock Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="序号" />
                                 <TextBlock Grid.Column="1" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="时间" />
                                 <TextBlock Grid.Column="2" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="方向" />
                                 <TextBlock Grid.Column="3" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="类型" />
@@ -687,8 +694,7 @@
                                                         <Setter Property="Background" Value="#F7FAFE" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                                        <Setter Property="Background" Value="#EEF4FF" />
-                                                        <Setter Property="BorderBrush" Value="#D7E4FB" />
+                                                        <Setter Property="Background" Value="#B5D0F5" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -703,7 +709,7 @@
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
-                                                       Text="{Binding CompactIndex}" />
+                                                       Text="{Binding DisplayIndex}" />
                                             <TextBlock Grid.Column="1"
                                                        Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
                                                        Text="{Binding TimeLabel}" />
@@ -1382,7 +1388,7 @@
                                             <Grid Grid.Row="1" MinHeight="0">
                                                 <controls:JsonTreeViewControl x:Name="PayloadProtobufViewer" />
                                                 <Border x:Name="PayloadProtobufEmptyPanel"
-                                                        Background="#F8FAFD"
+                                                        Background="#F0F0F0"
                                                         IsHitTestVisible="False">
                                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <TextBlock HorizontalAlignment="Center"

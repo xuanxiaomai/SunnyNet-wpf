@@ -4,7 +4,7 @@
              xmlns:controls="clr-namespace:SunnyNet.Wpf.Controls">
     <UserControl.Resources>
         <Style x:Key="NameValueColumnHeaderStyle" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
-            <Setter Property="Background" Value="#F8FAFD" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="BorderBrush" Value="#E7ECF3" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="Padding" Value="10,6" />
@@ -14,14 +14,41 @@
 
         <Style x:Key="NameValueRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <Setter Property="MinHeight" Value="30" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="BorderBrush" Value="#EEF2F7" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#B5D0F5" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
-        <Style x:Key="NameValueCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+        <Style x:Key="NameValueCellStyle" TargetType="DataGridCell">
             <Setter Property="Padding" Value="7,3" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderThickness="0"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#B5D0F5" />
+                    <Setter Property="Foreground" Value="#0D3B66" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="NameKeyTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DetailNameCellTextStyle}">
@@ -67,6 +94,8 @@
                       CellStyle="{StaticResource NameValueCellStyle}"
                       ColumnHeaderStyle="{StaticResource NameValueColumnHeaderStyle}"
                       RowStyle="{StaticResource NameValueRowStyle}"
+                      GridLinesVisibility="None"
+                      SnapsToDevicePixels="True"
                       SelectionMode="Single"
                       SelectionUnit="FullRow"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -146,7 +175,7 @@
 
             <Border x:Name="EmptyPanel"
                     Margin="6"
-                    Background="#F8FAFD"
+                    Background="#F0F0F0"
                     CornerRadius="8"
                     IsHitTestVisible="False">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">

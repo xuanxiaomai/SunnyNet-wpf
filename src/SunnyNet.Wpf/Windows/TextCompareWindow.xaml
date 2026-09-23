@@ -165,7 +165,7 @@
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
                                         <TextBlock Margin="12,0" VerticalAlignment="Center" Style="{StaticResource SectionTitleTextStyle}" Text="原始数据" />
-                                        <TextBox x:Name="DistinctLeftTextBox" Grid.Row="1" Margin="12" AcceptsReturn="True" Background="White" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
+                                        <TextBox x:Name="DistinctLeftTextBox" Grid.Row="1" Margin="12" AcceptsReturn="True" Background="#F0F0F0" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
                                     </Grid>
                                 </Border>
                                 <GridSplitter Grid.Column="1" Width="12" HorizontalAlignment="Stretch" />
@@ -176,7 +176,7 @@
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
                                         <TextBlock Margin="12,0" VerticalAlignment="Center" Style="{StaticResource SectionTitleTextStyle}" Text="去重结果" />
-                                        <TextBox x:Name="DistinctOutputTextBox" Grid.Row="1" Margin="12" AcceptsReturn="True" Background="White" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
+                                        <TextBox x:Name="DistinctOutputTextBox" Grid.Row="1" Margin="12" AcceptsReturn="True" Background="#F0F0F0" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
                                     </Grid>
                                 </Border>
                             </Grid>
@@ -193,19 +193,19 @@
                             <Border Style="{StaticResource CardBorderStyle}">
                                 <StackPanel Margin="16">
                                     <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="时间转时间戳" />
-                                    <TextBox x:Name="DateTimeInputTextBox" Margin="0,12,0,0" Height="40" Padding="10,6" Background="White" Foreground="#1F2D3D" CaretBrush="#1E50C8" VerticalContentAlignment="Center" Text="2026-04-25 12:00:00" />
+                                    <TextBox x:Name="DateTimeInputTextBox" Margin="0,12,0,0" Height="40" Padding="10,6" Background="#F0F0F0" Foreground="#1F2D3D" CaretBrush="#1E50C8" VerticalContentAlignment="Center" Text="2026-04-25 12:00:00" />
                                     <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
                                         <Button MinWidth="100" Padding="12,5" Click="UseCurrentTime_Click" Content="当前时间" />
                                         <Button Margin="8,0,0,0" MinWidth="120" Padding="12,5" Click="DateTimeToTimestamp_Click" Content="转换为时间戳" />
                                     </StackPanel>
                                     <TextBlock Margin="0,18,0,0" Style="{StaticResource SectionTitleTextStyle}" Text="时间戳转时间" />
-                                    <TextBox x:Name="TimestampInputTextBox" Margin="0,12,0,0" Height="40" Padding="10,6" Background="White" Foreground="#1F2D3D" CaretBrush="#1E50C8" VerticalContentAlignment="Center" />
+                                    <TextBox x:Name="TimestampInputTextBox" Margin="0,12,0,0" Height="40" Padding="10,6" Background="#F0F0F0" Foreground="#1F2D3D" CaretBrush="#1E50C8" VerticalContentAlignment="Center" />
                                     <Button Margin="0,12,0,0" MinWidth="120" HorizontalAlignment="Left" Padding="12,5" Click="TimestampToDateTime_Click" Content="转换为时间" />
                                 </StackPanel>
                             </Border>
                             <GridSplitter Grid.Column="1" Width="12" HorizontalAlignment="Stretch" />
                             <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
-                                <TextBox x:Name="TimestampOutputTextBox" Margin="12" AcceptsReturn="True" IsReadOnly="True" Background="White" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
+                                <TextBox x:Name="TimestampOutputTextBox" Margin="12" AcceptsReturn="True" IsReadOnly="True" Background="#F0F0F0" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
                             </Border>
                         </Grid>
                     </TabItem>
@@ -230,11 +230,11 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Border Style="{StaticResource CardBorderStyle}">
-                                    <TextBox x:Name="CaseInputTextBox" Margin="12" AcceptsReturn="True" Background="White" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
+                                    <TextBox x:Name="CaseInputTextBox" Margin="12" AcceptsReturn="True" Background="#F0F0F0" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
                                 </Border>
                                 <GridSplitter Grid.Column="1" Width="12" HorizontalAlignment="Stretch" />
                                 <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
-                                    <TextBox x:Name="CaseOutputTextBox" Margin="12" AcceptsReturn="True" Background="White" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
+                                    <TextBox x:Name="CaseOutputTextBox" Margin="12" AcceptsReturn="True" Background="#F0F0F0" Foreground="{StaticResource TextPrimaryBrush}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" FontFamily="Consolas, Microsoft YaHei UI" TextWrapping="Wrap" />
                                 </Border>
                             </Grid>
                         </Grid>

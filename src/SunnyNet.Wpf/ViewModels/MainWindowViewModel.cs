@@ -95,7 +95,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     private int _nextIndex = 1;
     private int _favoriteCount;
     private CaptureEntry? _selectedSession;
-    private bool _showFavoritesOnly;
+    private bool _showTaggedOnly;
     private bool _showSearchResultsOnly;
     private bool _isBusy;
     private bool _autoScroll;
@@ -357,7 +357,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     }
 
     public bool HasActiveSessionFilter =>
-        ShowFavoritesOnly
+        ShowTaggedOnly
         || ShowSearchResultsOnly
         || _selectedProcessFilterKeys.Count > 0
         || _selectedDomainFilterKeys.Count > 0
@@ -379,12 +379,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     public int SearchResultCount { get; private set; }
 
-    public bool ShowFavoritesOnly
+    public bool ShowTaggedOnly
     {
-        get => _showFavoritesOnly;
+        get => _showTaggedOnly;
         set
         {
-            if (!SetProperty(ref _showFavoritesOnly, value))
+            if (!SetProperty(ref _showTaggedOnly, value))
             {
                 return;
             }
@@ -501,7 +501,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         return cleared;
     }
 
-    public void InitializeFavoriteSettings(IEnumerable<string>? favoriteKeys, bool showFavoritesOnly)
+    public void InitializeFavoriteSettings(IEnumerable<string>? favoriteKeys, bool showFavoritesOnly = false)
     {
         _favoriteKeys.Clear();
         if (favoriteKeys is not null)
@@ -522,7 +522,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         _favoriteCount = Sessions.Count(static entry => entry.IsFavorite);
-        ShowFavoritesOnly = showFavoritesOnly;
         NotifyFavoriteSummaryChanged();
     }
 
@@ -555,11 +554,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         NotifyFavoriteSummaryChanged();
-
-        if (ShowFavoritesOnly)
-        {
-            RefreshSessionFilterItems();
-        }
     }
 
     public void SetSelectedProcessFilters(IEnumerable<string> keys)
@@ -592,15 +586,29 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     public void SetSelectedMethodFilters(IEnumerable<string> keys)
     {
-        if (!ReplaceSelectedFilterKeys(_selectedMethodFilterKeys, keys, AllMethodFilterKey))
+        IEnumerable<string> normalizedKeys = keys.Select(NormalizeMethodFilterValue);
+        if (!ReplaceSelectedFilterKeys(_selectedMethodFilterKeys, normalizedKeys, AllMethodFilterKey))
         {
-            ApplySelectionToFilterItems(MethodFilters, _selectedMethodFilterKeys);
+            SyncMethodFilterSelection();
             return;
         }
 
-        ApplySelectionToFilterItems(MethodFilters, _selectedMethodFilterKeys);
+        SyncMethodFilterSelection();
         RefreshSessionView();
         OnPropertyChanged(nameof(HasActiveSessionFilter));
+    }
+
+    private void SyncMethodFilterSelection()
+    {
+        IsRefreshingSessionFilters = true;
+        try
+        {
+            ApplySelectionToFilterItems(MethodFilters, _selectedMethodFilterKeys);
+        }
+        finally
+        {
+            IsRefreshingSessionFilters = false;
+        }
     }
 
     public void SetSelectedSearchResultFilters(IEnumerable<string> keys)
@@ -656,7 +664,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         CaptureEntry[] entries = Sessions
-            .Where(entry => normalizedKeys.Contains(NormalizeMethodFilterValue(entry.Method)))
+            .Where(entry => normalizedKeys.Contains(NormalizeMethodFilterValue(entry.DisplayMethod)))
             .ToArray();
 
         await DeleteSessionsAsync(entries);
@@ -716,6 +724,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         foreach (CaptureEntry entry in selectedEntries)
         {
             entry.TagColor = nextColor;
+        }
+
+        if (ShowTaggedOnly)
+        {
+            RefreshSessionView();
         }
 
         StatusRight = string.IsNullOrWhiteSpace(nextColor)
@@ -3305,7 +3318,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     public void ClearSessionDecorations()
     {
         ClearSessionFilters();
-        ShowFavoritesOnly = false;
+        ShowTaggedOnly = false;
         ClearAllSearchHighlights();
         RefreshSessionView();
     }
@@ -3333,7 +3346,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         if (_selectedMethodFilterKeys.Count > 0
-            && !_selectedMethodFilterKeys.Contains(NormalizeMethodFilterValue(entry.Method)))
+            && !_selectedMethodFilterKeys.Contains(NormalizeMethodFilterValue(entry.DisplayMethod)))
         {
             return false;
         }
@@ -3343,7 +3356,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
             return false;
         }
 
-        if (ShowFavoritesOnly && !entry.IsFavorite)
+        if (ShowTaggedOnly && !entry.HasTagColor)
         {
             return false;
         }
@@ -3557,8 +3570,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     private IReadOnlyList<CaptureEntry> GetSessionFilterSource()
     {
-        return ShowFavoritesOnly
-            ? Sessions.Where(static entry => entry.IsFavorite)
+        return ShowTaggedOnly
+            ? Sessions.Where(static entry => entry.HasTagColor)
                 .ToArray()
             : Sessions.ToArray();
     }
@@ -4626,7 +4639,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         Dictionary<string, int> counter = new(StringComparer.OrdinalIgnoreCase);
         foreach (CaptureEntry entry in entries)
         {
-            string key = NormalizeMethodFilterValue(entry.Method);
+            string key = NormalizeMethodFilterValue(entry.DisplayMethod);
             counter[key] = counter.TryGetValue(key, out int count) ? count + 1 : 1;
         }
 
@@ -4677,7 +4690,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     private static string NormalizeMethodFilterValue(string? value)
     {
         string key = NormalizeFilterValue(value, "未知方法");
-        return key.Equals("Websocket", StringComparison.OrdinalIgnoreCase) ? "WebSocket" : key;
+        if (key.Equals("Websocket", StringComparison.OrdinalIgnoreCase)
+            || key.Equals("WS", StringComparison.OrdinalIgnoreCase)
+            || key.Equals("WSS", StringComparison.OrdinalIgnoreCase))
+        {
+            return "WebSocket";
+        }
+
+        return key;
     }
 
     private static int GetMethodOrder(string method)

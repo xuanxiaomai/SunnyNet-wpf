@@ -15,7 +15,7 @@
             <Setter Property="Height" Value="30" />
             <Setter Property="Margin" Value="0,0,8,0" />
             <Setter Property="Padding" Value="12,0" />
-            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="BorderBrush" Value="#D3DFEC" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
@@ -111,7 +111,7 @@
         </Style>
 
         <Style x:Key="RulesSummaryCardStyle" TargetType="{x:Type Border}">
-            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="BorderBrush" Value="#DCE6F1" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
@@ -136,7 +136,7 @@
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="BorderBrush" Value="#E1E8F0" />
             <Setter Property="BorderThickness" Value="1,1,0,0" />
-            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="ColumnHeaderStyle">
                 <Setter.Value>
                     <Style TargetType="{x:Type DataGridColumnHeader}" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
@@ -171,7 +171,7 @@
                 <Setter.Value>
                     <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
                         <Setter Property="MinHeight" Value="25" />
-                        <Setter Property="Background" Value="#FFFFFF" />
+                        <Setter Property="Background" Value="#F0F0F0" />
                         <Setter Property="BorderBrush" Value="#E4EAF2" />
                         <Setter Property="BorderThickness" Value="0,0,0,1" />
                         <Style.Triggers>
@@ -256,7 +256,7 @@
     </Window.Resources>
 
     <Grid Margin="24">
-        <Border Background="#FFFFFF"
+        <Border Background="#F0F0F0"
                 BorderBrush="#CBD8E6"
                 BorderThickness="1"
                 CornerRadius="9">
@@ -799,7 +799,7 @@
                             </DataGrid>
 
                             <Border x:Name="PlaceholderListPanel"
-                                    Background="#FFFFFF"
+                                    Background="#F0F0F0"
                                     Visibility="Collapsed">
                                 <TextBlock x:Name="PlaceholderTextBlock"
                                            HorizontalAlignment="Center"

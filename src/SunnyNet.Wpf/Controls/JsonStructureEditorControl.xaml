@@ -66,7 +66,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Border BorderBrush="#DDE7F2" BorderThickness="1" CornerRadius="8" Background="White">
+    <Border BorderBrush="#DDE7F2" BorderThickness="1" CornerRadius="8" Background="#F0F0F0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32" />
@@ -87,7 +87,7 @@
                      Grid.Row="1"
                      Margin="6,0,6,8"
                      BorderThickness="0"
-                     Background="White"
+                     Background="#F0F0F0"
                      ItemContainerStyle="{StaticResource JsonNodeRowStyle}"
                      AllowDrop="True"
                      SelectionChanged="JsonNodeListBox_SelectionChanged"

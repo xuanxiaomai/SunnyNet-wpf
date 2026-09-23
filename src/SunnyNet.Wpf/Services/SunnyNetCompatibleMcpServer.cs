@@ -2333,7 +2333,8 @@ public sealed class SunnyNetCompatibleMcpServer : IAsyncDisposable
     private void PersistFavoriteSettings()
     {
         UiLayoutSettings settings = UiLayoutSettingsStore.Load();
-        settings.ShowFavoritesOnly = _viewModel.ShowFavoritesOnly;
+        settings.ShowTaggedOnly = _viewModel.ShowTaggedOnly;
+        settings.ShowFavoritesOnly = false;
         settings.FavoriteSessionKeys = _viewModel.GetFavoriteKeys().ToList();
         UiLayoutSettingsStore.Save(settings);
     }
@@ -2805,6 +2806,7 @@ public sealed class SunnyNetCompatibleMcpServer : IAsyncDisposable
     private static string GetSessionWay(CaptureEntry entry)
     {
         if (entry.DisplayMethod.Equals("WS", StringComparison.OrdinalIgnoreCase)
+            || entry.DisplayMethod.Equals("WSS", StringComparison.OrdinalIgnoreCase)
             || entry.Method.Equals("Websocket", StringComparison.OrdinalIgnoreCase)
             || entry.Method.Equals("WebSocket", StringComparison.OrdinalIgnoreCase)
             || entry.ResponseType.Contains("Websocket", StringComparison.OrdinalIgnoreCase)

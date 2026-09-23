@@ -14,6 +14,7 @@ public sealed class UiLayoutSettings
     public double DetailRequestRatio { get; set; } = double.NaN;
     public string CaptureScopeMode { get; set; } = "All";
     public bool ShowFavoritesOnly { get; set; }
+    public bool ShowTaggedOnly { get; set; }
     public List<string> FavoriteSessionKeys { get; set; } = new();
     public List<ProcessCaptureNameSetting> ProcessCaptureNames { get; set; } = new();
     public DateTime LastUpdateCheckUtc { get; set; } = DateTime.MinValue;

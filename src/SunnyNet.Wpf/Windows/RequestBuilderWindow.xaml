@@ -39,7 +39,7 @@
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="TextBoxBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                <Setter TargetName="TextBoxBorder" Property="Background" Value="White" />
+                                <Setter TargetName="TextBoxBorder" Property="Background" Value="#F0F0F0" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.55" />
@@ -104,7 +104,7 @@
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontSize" Value="11.5" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Background" Value="#F8FAFD" />
+            <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
         </Style>

@@ -217,7 +217,7 @@
                 <Border x:Name="PacketsEmptyPanel"
                         Grid.RowSpan="3"
                         Margin="8,40,8,8"
-                        Background="#F8FAFD"
+                        Background="#F0F0F0"
                         CornerRadius="10"
                         IsHitTestVisible="False">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -452,7 +452,7 @@
                                 <Grid Grid.Row="1" MinHeight="0">
                                     <controls:JsonTreeViewControl x:Name="PacketProtobufViewer" />
                                     <Border x:Name="PacketProtobufEmptyPanel"
-                                            Background="#F8FAFD"
+                                            Background="#F0F0F0"
                                             IsHitTestVisible="False">
                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock HorizontalAlignment="Center"

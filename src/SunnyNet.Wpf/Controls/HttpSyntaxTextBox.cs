@@ -399,9 +399,13 @@ public sealed class HttpSyntaxTextBox : RichTextBox
     private void RenderDocument(int version)
     {
         _searchMatchRuns.Clear();
+        double lineHeight = Math.Ceiling(FontSize + 4);
         _paragraph = new Paragraph
         {
-            Margin = new Thickness(0)
+            Margin = new Thickness(0),
+            Padding = new Thickness(0),
+            LineHeight = lineHeight,
+            LineStackingStrategy = LineStackingStrategy.BlockLineHeight
         };
 
         FlowDocument document = new()
@@ -409,7 +413,7 @@ public sealed class HttpSyntaxTextBox : RichTextBox
             PagePadding = new Thickness(14, 12, 14, 12),
             FontFamily = FontFamily,
             FontSize = FontSize,
-            LineHeight = 18
+            LineHeight = lineHeight
         };
         document.Blocks.Add(_paragraph);
         Document = document;

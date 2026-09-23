@@ -6,7 +6,7 @@
         Height="560"
         MinWidth="720"
         MinHeight="480"
-        Background="#FFFFFF"
+        Background="#F0F0F0"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">

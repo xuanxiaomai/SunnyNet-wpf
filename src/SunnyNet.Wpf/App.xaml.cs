@@ -1,5 +1,8 @@
 using System.IO;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using SunnyNet.Wpf.Services;
 
@@ -12,6 +15,7 @@ public partial class App : Application
         DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+        ForceContextSubmenusOpenRight();
 
         if (McpStdioHost.IsRequested(eventArgs.Args))
         {
@@ -35,6 +39,54 @@ public partial class App : Application
             MessageBox.Show(exception.Message, "SunnyNet 启动失败", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(-1);
         }
+    }
+
+    private static void ForceContextSubmenusOpenRight()
+    {
+        SetMenuDropAlignmentRight();
+        SystemParameters.StaticPropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(SystemParameters.MenuDropAlignment))
+            {
+                SetMenuDropAlignmentRight();
+            }
+        };
+
+        EventManager.RegisterClassHandler(
+            typeof(MenuItem),
+            MenuItem.SubmenuOpenedEvent,
+            new RoutedEventHandler(OnMenuItemSubmenuOpened));
+    }
+
+    private static void SetMenuDropAlignmentRight()
+    {
+        if (!SystemParameters.MenuDropAlignment)
+        {
+            return;
+        }
+
+        typeof(SystemParameters)
+            .GetField("_menuDropAlignment", BindingFlags.NonPublic | BindingFlags.Static)
+            ?.SetValue(null, false);
+    }
+
+    private static void OnMenuItemSubmenuOpened(object sender, RoutedEventArgs routedEventArgs)
+    {
+        if (sender is not MenuItem menuItem
+            || menuItem.Role is MenuItemRole.TopLevelHeader or MenuItemRole.TopLevelItem)
+        {
+            return;
+        }
+
+        menuItem.ApplyTemplate();
+        if (menuItem.Template?.FindName("PART_Popup", menuItem) is not Popup popup)
+        {
+            return;
+        }
+
+        popup.Placement = PlacementMode.Right;
+        popup.HorizontalOffset = 0;
+        popup.VerticalOffset = 0;
     }
 
     private static void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs eventArgs)

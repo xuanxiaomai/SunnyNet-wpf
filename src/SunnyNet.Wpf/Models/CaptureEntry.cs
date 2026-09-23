@@ -86,10 +86,33 @@ public sealed class CaptureEntry : ViewModelBase
     }
 
     [JsonIgnore]
-    public string DisplayMethod => Method.Equals("WebSocket", StringComparison.OrdinalIgnoreCase)
+    public string DisplayMethod => IsWebSocketMethod
+        ? IsSecureWebSocketUrl(Url) ? "WSS" : "WS"
+        : Method;
+
+    [JsonIgnore]
+    private bool IsWebSocketMethod =>
+        Method.Equals("WebSocket", StringComparison.OrdinalIgnoreCase)
         || Method.Equals("Websocket", StringComparison.OrdinalIgnoreCase)
-            ? "WS"
-            : Method;
+        || Method.Equals("WS", StringComparison.OrdinalIgnoreCase)
+        || Method.Equals("WSS", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSecureWebSocketUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        if (Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+        {
+            return uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                || uri.Scheme.Equals("wss", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("wss://", StringComparison.OrdinalIgnoreCase);
+    }
 
     [JsonPropertyName("状态")]
     public string State
@@ -108,7 +131,13 @@ public sealed class CaptureEntry : ViewModelBase
     public string Url
     {
         get => _url;
-        set => SetProperty(ref _url, value ?? "");
+        set
+        {
+            if (SetProperty(ref _url, value ?? ""))
+            {
+                OnPropertyChanged(nameof(DisplayMethod));
+            }
+        }
     }
 
     [JsonPropertyName("HOST")]
