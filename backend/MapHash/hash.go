@@ -89,6 +89,7 @@ type Request struct {
 	WsConn  *SunnyNet.WsConn   `json:"-"`
 	TcpConn *SunnyNet.TcpConn  `json:"-"`
 	UdpConn *SunnyNet.UDPConn  `json:"-"`
+	Closed  bool               `json:"-"`
 	Options struct {
 		StopSend bool `json:"StopSend"`
 		StopRec  bool `json:"StopRec"`
@@ -585,22 +586,57 @@ func (m *Map) SetOptions(Theology int, send, rec, all bool) bool {
 	}
 	return h != nil
 }
+func (m *Map) MarkClosed(Theology int) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	h := m.Request[Theology]
+	if h == nil {
+		return
+	}
+	h.Closed = true
+	h.WsConn = nil
+	h.TcpConn = nil
+	h.UdpConn = nil
+}
+
+func isCloseSocketData(data *UpdateSocketData) bool {
+	return data != nil && data.Info != nil && data.Info.Ico == "websocket_close"
+}
+
 func (m *Map) SetSocketData(Theology int, data *UpdateSocketData, up bool, num int) bool {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	h := m.Request[Theology]
-	if h != nil {
-		if num > 0 {
-			if up {
-				h.SendNum += num
-			} else {
-				h.RecNum += num
-			}
-			m.addResponseLength(Theology, h.SendNum, h.RecNum)
-		}
-		h.SocketData = append(h.SocketData, data)
+	if h == nil {
+		return false
 	}
-	return h != nil
+	if isCloseSocketData(data) {
+		for _, existing := range h.SocketData {
+			if isCloseSocketData(existing) {
+				return false
+			}
+		}
+	}
+	if num > 0 {
+		if up {
+			h.SendNum += num
+		} else {
+			h.RecNum += num
+		}
+		m.addResponseLength(Theology, h.SendNum, h.RecNum)
+	}
+	if !isCloseSocketData(data) {
+		for index, existing := range h.SocketData {
+			if isCloseSocketData(existing) {
+				h.SocketData = append(h.SocketData, nil)
+				copy(h.SocketData[index+1:], h.SocketData[index:])
+				h.SocketData[index] = data
+				return true
+			}
+		}
+	}
+	h.SocketData = append(h.SocketData, data)
+	return true
 }
 func (m *Map) SetSocketDataEmpty(Theology int) bool {
 	m.lock.Lock()

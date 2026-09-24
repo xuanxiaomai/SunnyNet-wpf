@@ -202,30 +202,17 @@ public partial class PacketMessagesControl : UserControl
 
     private void RefreshState()
     {
-        if (TotalPacketsTextBlock is null)
+        if (PacketsEmptyPanel is null)
         {
             return;
         }
 
         int total = 0;
-        int upstream = 0;
-        int downstream = 0;
         foreach (SocketEntry entry in EnumerateEntries())
         {
             total++;
-            if (entry.Icon == "上行")
-            {
-                upstream++;
-            }
-            else if (entry.Icon == "下行")
-            {
-                downstream++;
-            }
         }
 
-        TotalPacketsTextBlock.Text = $"{total:N0} 包";
-        UpstreamPacketsTextBlock.Text = $"上行 {upstream:N0}";
-        DownstreamPacketsTextBlock.Text = $"下行 {downstream:N0}";
         PacketsEmptyPanel.Visibility = total == 0 && !IsInspectorMode ? Visibility.Visible : Visibility.Collapsed;
         PacketsEmptyTitleTextBlock.Text = $"暂无 {ProtocolName} 数据包";
         RefreshProtocolText();
@@ -359,28 +346,18 @@ public partial class PacketMessagesControl : UserControl
         }
 
         (byte[] bytes, string text, string json) = await viewModel.LoadSocketPayloadAsync(Theology, entry.Index - 1);
-        return BuildPayloadSnapshot(entry, bytes, string.IsNullOrWhiteSpace(text) ? entry.PreviewText : text, json);
+        return BuildPayloadSnapshot(entry, bytes, text, json);
     }
 
     private PacketPayloadSnapshot BuildPayloadSnapshot(SocketEntry entry, byte[] bytes, string text, string jsonCandidate)
     {
         bool hasJson = !string.IsNullOrWhiteSpace(jsonCandidate);
         bool isBinary = LooksBinary(bytes);
-        string rawText = text ?? "";
-        string displayText;
-        if (isBinary)
-        {
-            displayText = BuildBinaryPreview(entry, bytes, rawText);
-        }
-        else if (rawText.Length > MaxInlineTextChars)
-        {
-            displayText = rawText[..MaxInlineTextChars]
-                + $"\r\n\r\n已预览前 {MaxInlineTextChars:N0} 字符，完整内容请使用 HEX 视图或右键复制。";
-        }
-        else
-        {
-            displayText = rawText;
-        }
+        string rawText = ResolvePacketDisplayText(bytes, text, entry.PreviewText);
+        string displayText = rawText.Length > MaxInlineTextChars
+            ? rawText[..MaxInlineTextChars]
+                + $"\r\n\r\n已预览前 {MaxInlineTextChars:N0} 字符，完整内容请使用 HEX 视图或右键复制。"
+            : rawText;
 
         string status = bytes.Length > 0
             ? $"已加载 {bytes.Length:N0} Bytes"
@@ -876,7 +853,7 @@ public partial class PacketMessagesControl : UserControl
 
         if (encoding.Equals("UTF8", StringComparison.OrdinalIgnoreCase))
         {
-            return snapshot.IsBinary ? Encoding.UTF8.GetString(snapshot.Bytes) : snapshot.RawText;
+            return snapshot.Bytes.Length > 0 ? SocketEntry.DecodeBytesAsText(snapshot.Bytes) : snapshot.RawText;
         }
 
         return FormatHexWithSpaces(snapshot.Bytes);
@@ -1018,27 +995,19 @@ public partial class PacketMessagesControl : UserControl
         return $"{Theology}:{entry.Index}:{entry.Length}:{entry.Type}:{entry.Icon}";
     }
 
-    private static string BuildBinaryPreview(SocketEntry entry, byte[] bytes, string textPreview)
+    private static string ResolvePacketDisplayText(byte[] bytes, string text, string fallback)
     {
-        StringBuilder builder = new();
-        builder.AppendLine($"[{entry.DirectionLabel}] {entry.LengthLabel}");
-        builder.AppendLine("检测为二进制数据，建议切换 HEX 视图查看完整内容。");
-
-        string compactText = (textPreview ?? "").Trim();
-        if (!string.IsNullOrWhiteSpace(compactText))
-        {
-            builder.AppendLine();
-            builder.AppendLine("文本探测:");
-            builder.AppendLine(compactText.Length > 4096 ? compactText[..4096] + "..." : compactText);
-        }
-
         if (bytes.Length > 0)
         {
-            builder.AppendLine();
-            builder.Append("HEX 视图保留完整字节。");
+            return SocketEntry.DecodeBytesAsText(bytes);
         }
 
-        return builder.ToString();
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            return SocketEntry.DecodePreviewAsText(text);
+        }
+
+        return string.IsNullOrWhiteSpace(fallback) ? "" : SocketEntry.DecodePreviewAsText(fallback);
     }
 
     private static bool LooksBinary(byte[] bytes)

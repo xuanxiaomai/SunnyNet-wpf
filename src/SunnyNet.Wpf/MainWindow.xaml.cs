@@ -51,6 +51,8 @@ public partial class MainWindow : Window
         ApplySavedWindowLayout();
         ApplySavedInternalLayout();
         ApplySavedColumnLayout();
+        RequestDataPanel.Visibility = Visibility.Visible;
+        ColumnPickerPanel.Visibility = Visibility.Collapsed;
         ApplySavedCaptureScope();
         ApplySavedFavoriteSettings();
         ApplySavedProcessCaptureSettings();
@@ -1320,20 +1322,43 @@ public partial class MainWindow : Window
         ResponseRawViewer.MoveToNextMatch();
     }
 
-    private void RequestPanelButton_Click(object sender, RoutedEventArgs routedEventArgs)
+    private void SessionColumnHeaderContextMenu_Opened(object sender, RoutedEventArgs routedEventArgs)
     {
-        RequestDataPanel.Visibility = Visibility.Visible;
-        ColumnPickerPanel.Visibility = Visibility.Collapsed;
-        RequestPanelButton.IsChecked = true;
-        ColumnPanelButton.IsChecked = false;
+        if (sender is not ContextMenu menu)
+        {
+            return;
+        }
+
+        Dictionary<string, DataGridColumn> columns = GetSessionColumnMap();
+        foreach (object item in menu.Items)
+        {
+            if (item is MenuItem { Tag: string key } menuItem && columns.TryGetValue(key, out DataGridColumn? column))
+            {
+                menuItem.IsChecked = column.Visibility == Visibility.Visible;
+            }
+        }
     }
 
-    private void ColumnPanelButton_Click(object sender, RoutedEventArgs routedEventArgs)
+    private void SessionColumnMenuItem_Click(object sender, RoutedEventArgs routedEventArgs)
     {
-        RequestDataPanel.Visibility = Visibility.Collapsed;
-        ColumnPickerPanel.Visibility = Visibility.Visible;
-        RequestPanelButton.IsChecked = false;
-        ColumnPanelButton.IsChecked = true;
+        if (sender is not MenuItem { Tag: string key } menuItem)
+        {
+            return;
+        }
+
+        if (!GetSessionColumnMap().TryGetValue(key, out DataGridColumn? column))
+        {
+            return;
+        }
+
+        bool isVisible = menuItem.IsChecked;
+        column.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+        if (!_isInitializingLayout)
+        {
+            SaveColumnSetting(column, isVisible);
+        }
+
+        SyncColumnPickerChecks();
     }
 
     private void RequestZoom_Click(object sender, RoutedEventArgs routedEventArgs)
@@ -1477,14 +1502,18 @@ public partial class MainWindow : Window
         Dictionary<string, DataGridColumn> columns = GetSessionColumnMap();
         foreach ((string key, DataGridColumn column) in columns)
         {
-            if (_layoutSettings.SessionColumns.TryGetValue(key, out bool isVisible))
-            {
-                column.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
-            }
+            column.Visibility = Visibility.Visible;
+            _layoutSettings.SessionColumns[key] = true;
 
             if (_layoutSettings.SessionColumnWidths.TryGetValue(key, out double width) && IsValidLength(width))
             {
-                column.Width = new DataGridLength(Clamp(width, 36, 1200), DataGridLengthUnitType.Pixel);
+                double minWidth = column.MinWidth > 0 ? column.MinWidth : 36;
+                column.Width = new DataGridLength(Math.Max(minWidth, Clamp(width, 36, 1200)), DataGridLengthUnitType.Pixel);
+            }
+            else if (column.Width.IsStar || column.Width.IsAuto || column.Width.IsSizeToCells || column.Width.IsSizeToHeader)
+            {
+                double fallback = column.MinWidth > 0 ? Math.Max(column.MinWidth, 80) : 80;
+                column.Width = new DataGridLength(fallback, DataGridLengthUnitType.Pixel);
             }
         }
 
@@ -2315,6 +2344,10 @@ public partial class MainWindow : Window
     private void ClearFilters_Click(object sender, RoutedEventArgs routedEventArgs)
     {
         _viewModel.ClearSessionDecorations();
+        SearchResultFilterListBox.UnselectAll();
+        MethodFilterListBox.UnselectAll();
+        ProcessFilterListBox.UnselectAll();
+        DomainFilterListBox.UnselectAll();
         SaveFavoriteSettings();
     }
 
@@ -2628,6 +2661,39 @@ public partial class MainWindow : Window
 
         keyEventArgs.Handled = true;
         await _viewModel.DeleteSessionsByProcessFiltersAsync(selectedKeys);
+    }
+
+    private void StructureFilterItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs routedEventArgs)
+    {
+        routedEventArgs.Handled = true;
+    }
+
+    private void DomainFilterListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+    {
+        if (_viewModel.IsRefreshingSessionFilters)
+        {
+            return;
+        }
+
+        if (FindVisualParent<ListBoxItem>(mouseButtonEventArgs.OriginalSource as DependencyObject) is not ListBoxItem item
+            || item.DataContext is not SessionFilterItem filter)
+        {
+            return;
+        }
+
+        mouseButtonEventArgs.Handled = true;
+        item.Focus();
+
+        HashSet<string> keys = _viewModel.DomainFilters
+            .Where(static domain => domain.IsSelected)
+            .Select(static domain => domain.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (!keys.Add(filter.Key))
+        {
+            keys.Remove(filter.Key);
+        }
+
+        _viewModel.SetSelectedDomainFilters(keys);
     }
 
     private void DomainFilterListBox_SelectionChanged(object sender, SelectionChangedEventArgs routedEventArgs)

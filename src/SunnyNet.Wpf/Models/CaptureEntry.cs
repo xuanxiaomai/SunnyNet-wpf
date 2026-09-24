@@ -383,8 +383,19 @@ public sealed class CaptureEntry : ViewModelBase
     [JsonIgnore]
     public bool IsIntercepted => BreakMode > 0;
 
+    public bool IsDisconnected =>
+        Icon.Equals("websocket_close", StringComparison.OrdinalIgnoreCase)
+        || State.Contains("断开", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsConnectedStatus(CaptureEntry entry)
+    {
+        return entry.Icon.Equals("websocket_connect", StringComparison.OrdinalIgnoreCase)
+            || entry.State.Contains("已连接", StringComparison.OrdinalIgnoreCase);
+    }
+
     public void UpdateFrom(CaptureEntry entry)
     {
+        bool keepDisconnected = IsDisconnected && IsConnectedStatus(entry);
         Theology = entry.Theology;
         if (Theology > 0)
         {
@@ -403,6 +414,11 @@ public sealed class CaptureEntry : ViewModelBase
         ReceiveTime = entry.ReceiveTime;
         Notes = entry.Notes;
         Icon = entry.Icon;
+        if (keepDisconnected)
+        {
+            Icon = "websocket_close";
+            State = "已断开";
+        }
         if (!string.IsNullOrWhiteSpace(entry.TagColor))
         {
             TagColor = entry.TagColor;

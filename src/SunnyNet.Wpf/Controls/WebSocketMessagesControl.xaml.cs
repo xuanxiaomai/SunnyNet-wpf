@@ -138,8 +138,7 @@ public partial class WebSocketMessagesControl : UserControl
 
     private void ApplyDisplayModeVisualState()
     {
-        if (SummaryPanel is null
-            || FlowPanel is null
+        if (FlowPanel is null
             || InspectorPanel is null
             || FlowInspectorSplitter is null
             || FlowColumn is null
@@ -159,7 +158,6 @@ public partial class WebSocketMessagesControl : UserControl
         bool showReplayEditor = IsClassicInspectorMode || IsReplayMode;
         bool showProtobufTools = IsClassicInspectorMode || IsPayloadProtobufMode;
 
-        SummaryPanel.Visibility = inspectorOnly ? Visibility.Collapsed : Visibility.Visible;
         FlowPanel.Visibility = inspectorOnly ? Visibility.Collapsed : Visibility.Visible;
         FlowInspectorSplitter.Visibility = full ? Visibility.Visible : Visibility.Collapsed;
         InspectorPanel.Visibility = flowOnly ? Visibility.Collapsed : Visibility.Visible;
@@ -1022,17 +1020,17 @@ public partial class WebSocketMessagesControl : UserControl
 
         FrameStatistics statistics = CountFrameStatistics();
         int total = statistics.Total;
-        int upstream = statistics.Upstream;
-        int downstream = statistics.Downstream;
-        int textFrames = statistics.Text;
         int visible = HasActiveFrameFilter() ? CountVisibleEntries() : total;
 
-        TotalFramesTextBlock.Text = total.ToString();
-        UpstreamFramesTextBlock.Text = upstream.ToString();
-        DownstreamFramesTextBlock.Text = downstream.ToString();
-        TextFramesTextBlock.Text = textFrames.ToString();
-        FlowSummaryTextBlock.Text = visible == total ? $"{total} 帧" : $"{visible} / {total} 帧";
-        FilterStateTextBlock.Text = BuildFilterStateText(visible, total);
+        if (FlowSummaryTextBlock is not null)
+        {
+            FlowSummaryTextBlock.Text = visible == total ? $"{total} 帧" : $"{visible} / {total} 帧";
+        }
+
+        if (FilterStateTextBlock is not null)
+        {
+            FilterStateTextBlock.Text = BuildFilterStateText(visible, total);
+        }
 
         bool hasAnyEntry = total > 0;
         FramesEmptyPanel.Visibility = visible == 0 ? Visibility.Visible : Visibility.Collapsed;

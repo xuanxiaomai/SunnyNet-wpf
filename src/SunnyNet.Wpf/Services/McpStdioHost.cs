@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -141,22 +140,15 @@ internal static class McpStdioHost
     {
         if (IsHealthOk(client, healthUrl))
         {
-            TryActivateGui();
             return true;
         }
 
         if (!HasOtherSunnyNetProcess())
         {
-            StartGui();
+            return false;
         }
 
-        if (WaitForHealth(client, healthUrl, TimeSpan.FromSeconds(20)))
-        {
-            TryActivateGui();
-            return true;
-        }
-
-        return false;
+        return WaitForHealth(client, healthUrl, TimeSpan.FromSeconds(20));
     }
 
     private static bool IsHealthOk(HttpClient client, string healthUrl)
@@ -201,51 +193,6 @@ internal static class McpStdioHost
 
         return false;
     }
-
-    private static void StartGui()
-    {
-        string? exe = Environment.ProcessPath;
-        if (string.IsNullOrWhiteSpace(exe) || !File.Exists(exe))
-        {
-            throw new InvalidOperationException("找不到 SunnyNet.exe，无法自动打开界面。");
-        }
-
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = exe,
-            WorkingDirectory = Path.GetDirectoryName(exe) ?? "",
-            UseShellExecute = true
-        });
-    }
-
-    private static void TryActivateGui()
-    {
-        int currentId = Environment.ProcessId;
-        foreach (Process process in Process.GetProcessesByName("SunnyNet"))
-        {
-            if (process.Id == currentId)
-            {
-                continue;
-            }
-
-            process.Refresh();
-            IntPtr handle = process.MainWindowHandle;
-            if (handle == IntPtr.Zero)
-            {
-                continue;
-            }
-
-            ShowWindow(handle, 9);
-            SetForegroundWindow(handle);
-            return;
-        }
-    }
-
-    [DllImport("user32.dll")]
-    private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     private static int ReadPort(IReadOnlyList<string> args, int defaultPort)
     {

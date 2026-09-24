@@ -32,8 +32,10 @@ public partial class HexViewControl : UserControl
     private const double OffsetWidth = 92;
     private const double DividerWidth = 1;
     private const double OffsetTextLeft = 10;
-    private const double HexPaddingLeft = 12;
-    private const double AsciiPaddingLeft = 16;
+    private const double HexPaddingLeft = 10;
+    private const double HexPaddingRight = 6;
+    private const double AsciiPaddingLeft = 8;
+    private const double AsciiPaddingRight = 12;
     private const int MinBytesPerLine = 8;
     private const int MaxBytesPerLine = 32;
     private const int VirtualPageSize = 64 * 1024;
@@ -203,11 +205,14 @@ public partial class HexViewControl : UserControl
         _charWidth = MeasureCharacterWidth();
         _hexByteWidth = Math.Ceiling(_charWidth * 3);
         _bytesPerLine = CalculateBytesPerLine();
-        _hexColumnWidth = Math.Max(420, Math.Ceiling(_bytesPerLine * _hexByteWidth) + HexPaddingLeft + 18);
-        _asciiColumnWidth = Math.Max(220, Math.Ceiling(_bytesPerLine * _charWidth) + AsciiPaddingLeft + 18);
+        _hexColumnWidth = Math.Ceiling(_bytesPerLine * _hexByteWidth) + HexPaddingLeft + HexPaddingRight;
+        double asciiContentWidth = Math.Ceiling(_bytesPerLine * _charWidth) + AsciiPaddingLeft + AsciiPaddingRight;
+        double usedBeforeAscii = OffsetWidth + DividerWidth + _hexColumnWidth + DividerWidth;
+        double viewportWidth = BodyScrollViewer.ViewportWidth > 0 ? BodyScrollViewer.ViewportWidth : ActualWidth;
+        _asciiColumnWidth = Math.Max(asciiContentWidth, Math.Max(0, viewportWidth - usedBeforeAscii));
 
         int lineCount = GetLineCount(length);
-        RenderSurface.Width = Math.Max(BodyScrollViewer.ViewportWidth, OffsetWidth + DividerWidth + _hexColumnWidth + DividerWidth + _asciiColumnWidth);
+        RenderSurface.Width = Math.Max(viewportWidth, usedBeforeAscii + _asciiColumnWidth);
         RenderSurface.Height = Math.Max(BodyScrollViewer.ViewportHeight, TopPadding + BottomPadding + lineCount * LineHeight);
         SummaryTextBlock.Text = BuildSummaryText(length);
         SelectionInfoBorder.Visibility = HasSelection ? Visibility.Visible : Visibility.Collapsed;
@@ -224,7 +229,7 @@ public partial class HexViewControl : UserControl
             return 16;
         }
 
-        double reserved = OffsetWidth + DividerWidth + DividerWidth + HexPaddingLeft + AsciiPaddingLeft + 70;
+        double reserved = OffsetWidth + DividerWidth + DividerWidth + HexPaddingLeft + HexPaddingRight + AsciiPaddingLeft + AsciiPaddingRight;
         double perByte = _hexByteWidth + _charWidth;
         int bytesPerLine = (int)Math.Floor((width - reserved) / Math.Max(perByte, 1));
         return Math.Clamp(bytesPerLine, MinBytesPerLine, MaxBytesPerLine);

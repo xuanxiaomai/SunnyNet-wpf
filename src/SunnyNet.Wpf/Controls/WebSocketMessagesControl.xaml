@@ -439,124 +439,6 @@
     </UserControl.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <Border x:Name="SummaryPanel"
-                Grid.Row="0"
-                Margin="0,0,0,10"
-                Padding="12,10"
-                Background="{StaticResource SurfaceAltBrush}"
-                BorderBrush="{StaticResource DividerBrush}"
-                BorderThickness="1"
-                CornerRadius="10">
-            <DockPanel LastChildFill="False">
-                <Border DockPanel.Dock="Right"
-                        Margin="12,0,0,0"
-                        Padding="2"
-                        VerticalAlignment="Center"
-                        Background="{StaticResource SurfaceBrush}"
-                        BorderBrush="{StaticResource DividerBrush}"
-                        BorderThickness="1"
-                        CornerRadius="9">
-                    <StackPanel Orientation="Horizontal">
-                        <ToggleButton x:Name="AllDirectionFilterButton"
-                                      Tag="All"
-                                      IsChecked="True"
-                                      MinHeight="26"
-                                      Padding="10,3"
-                                      FontSize="12"
-                                      Style="{StaticResource SegmentedToggleButtonStyle}"
-                                      ToolTip="显示全部 WebSocket 消息"
-                                      Click="DirectionFilterToggle_Click"
-                                      Content="全部" />
-                        <ToggleButton x:Name="FlowSendDirectionFilterButton"
-                                      Tag="Send"
-                                      MinHeight="26"
-                                      Padding="10,3"
-                                      FontSize="12"
-                                      Style="{StaticResource SegmentedToggleButtonStyle}"
-                                      ToolTip="仅显示发送（上行）消息"
-                                      Click="DirectionFilterToggle_Click"
-                                      Content="发送" />
-                        <ToggleButton x:Name="FlowReceiveDirectionFilterButton"
-                                      Tag="Receive"
-                                      MinHeight="26"
-                                      Padding="10,3"
-                                      FontSize="12"
-                                      Style="{StaticResource SegmentedToggleButtonStyle}"
-                                      ToolTip="仅显示接收（下行）消息"
-                                      Click="DirectionFilterToggle_Click"
-                                      Content="接收" />
-                    </StackPanel>
-                </Border>
-                <StackPanel Orientation="Horizontal">
-                    <Border Padding="10,5"
-                            Background="{StaticResource SurfaceBrush}"
-                            BorderBrush="{StaticResource DividerBrush}"
-                            BorderThickness="1"
-                            CornerRadius="9">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource CaptionTextStyle}" Text="总帧" />
-                            <TextBlock x:Name="TotalFramesTextBlock"
-                                       Margin="8,0,0,0"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       FontWeight="SemiBold"
-                                       Text="0" />
-                        </StackPanel>
-                    </Border>
-                    <Border Margin="8,0,0,0"
-                            Padding="10,5"
-                            Background="#EAF8F1"
-                            BorderBrush="#CBE9D8"
-                            BorderThickness="1"
-                            CornerRadius="9">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource CaptionTextStyle}" Text="上行" />
-                            <TextBlock x:Name="UpstreamFramesTextBlock"
-                                       Margin="8,0,0,0"
-                                       Foreground="{StaticResource SuccessBrush}"
-                                       FontWeight="SemiBold"
-                                       Text="0" />
-                        </StackPanel>
-                    </Border>
-                    <Border Margin="8,0,0,0"
-                            Padding="10,5"
-                            Background="#EEF4FF"
-                            BorderBrush="#D8E7FF"
-                            BorderThickness="1"
-                            CornerRadius="9">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource CaptionTextStyle}" Text="下行" />
-                            <TextBlock x:Name="DownstreamFramesTextBlock"
-                                       Margin="8,0,0,0"
-                                       Foreground="{StaticResource AccentBrush}"
-                                       FontWeight="SemiBold"
-                                       Text="0" />
-                        </StackPanel>
-                    </Border>
-                    <Border Margin="8,0,0,0"
-                            Padding="10,5"
-                            Background="#ECFDF3"
-                            BorderBrush="#CFEEDB"
-                            BorderThickness="1"
-                            CornerRadius="9">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource CaptionTextStyle}" Text="文本帧" />
-                            <TextBlock x:Name="TextFramesTextBlock"
-                                       Margin="8,0,0,0"
-                                       Foreground="{StaticResource SuccessBrush}"
-                                       FontWeight="SemiBold"
-                                       Text="0" />
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="FlowColumn" Width="336" />
                 <ColumnDefinition x:Name="SplitterColumn" Width="10" />
@@ -567,8 +449,7 @@
                     Grid.Column="0"
                     Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource DividerBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8">
+                    BorderThickness="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -623,38 +504,68 @@
 
                     <Grid Grid.Row="1">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="30" />
+                            <RowDefinition Height="24" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0"
-                                Margin="8,0,8,0"
-                                Padding="10,0"
-                                Background="#F7FAFD"
+                                Padding="8,0"
+                                Background="#F5F5F5"
                                 BorderBrush="{StaticResource DividerBrush}"
-                                BorderThickness="1,1,1,0"
-                                CornerRadius="8,8,0,0">
+                                BorderThickness="0,0,0,1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="66" />
-                                    <ColumnDefinition Width="104" />
-                                    <ColumnDefinition Width="60" />
-                                    <ColumnDefinition Width="70" />
-                                    <ColumnDefinition Width="82" />
+                                    <ColumnDefinition Width="52" />
+                                    <ColumnDefinition Width="86" />
+                                    <ColumnDefinition Width="64" />
+                                    <ColumnDefinition Width="52" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="序号" />
+                                <TextBlock Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="#" />
                                 <TextBlock Grid.Column="1" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="时间" />
-                                <TextBlock Grid.Column="2" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="方向" />
-                                <TextBlock Grid.Column="3" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="类型" />
-                                <TextBlock Grid.Column="4" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="长度" />
-                                <TextBlock Grid.Column="5" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="消息摘要" />
+                                <TextBlock Grid.Column="2" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="类型" />
+                                <TextBlock Grid.Column="3" Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="长度" />
+                                <Grid Grid.Column="4">
+                                    <TextBlock Style="{StaticResource WebSocketFlowHeaderTextStyle}" Text="数据" />
+                                    <StackPanel HorizontalAlignment="Right"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <ToggleButton x:Name="AllDirectionFilterButton"
+                                                      MinHeight="20"
+                                                      Padding="7,1"
+                                                      FontSize="11"
+                                                      Style="{StaticResource SegmentedToggleButtonStyle}"
+                                                      Tag="All"
+                                                      IsChecked="True"
+                                                      ToolTip="显示全部 WebSocket 消息"
+                                                      Click="DirectionFilterToggle_Click"
+                                                      Content="全部" />
+                                        <ToggleButton x:Name="FlowSendDirectionFilterButton"
+                                                      MinHeight="20"
+                                                      Padding="7,1"
+                                                      FontSize="11"
+                                                      Style="{StaticResource SegmentedToggleButtonStyle}"
+                                                      Tag="Send"
+                                                      ToolTip="仅显示发送（上行）消息"
+                                                      Click="DirectionFilterToggle_Click"
+                                                      Content="发送" />
+                                        <ToggleButton x:Name="FlowReceiveDirectionFilterButton"
+                                                      MinHeight="20"
+                                                      Padding="7,1"
+                                                      FontSize="11"
+                                                      Style="{StaticResource SegmentedToggleButtonStyle}"
+                                                      Tag="Receive"
+                                                      ToolTip="仅显示接收（下行）消息"
+                                                      Click="DirectionFilterToggle_Click"
+                                                      Content="接收" />
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
                         </Border>
 
                         <ListBox x:Name="FramesList"
                                  Grid.Row="1"
-                                 Margin="8,0,8,0"
+                                 Margin="0"
                                  Background="Transparent"
                                  BorderThickness="0"
                                  ItemContainerStyle="{StaticResource WebSocketFrameItemStyle}"
@@ -699,41 +610,36 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <Grid Height="38" Margin="10,0">
+                                        <Grid Height="22" Margin="8,0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="66" />
-                                                <ColumnDefinition Width="104" />
-                                                <ColumnDefinition Width="60" />
-                                                <ColumnDefinition Width="70" />
-                                                <ColumnDefinition Width="82" />
+                                                <ColumnDefinition Width="52" />
+                                                <ColumnDefinition Width="86" />
+                                                <ColumnDefinition Width="64" />
+                                                <ColumnDefinition Width="52" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
-                                                       Text="{Binding DisplayIndex}" />
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Style="{StaticResource WebSocketFlowDirectionIconBorderStyle}"
+                                                        ToolTip="{Binding DirectionLabel}">
+                                                    <Path Style="{StaticResource WebSocketFlowDirectionIconPathStyle}" />
+                                                </Border>
+                                                <TextBlock Margin="4,0,0,0"
+                                                           Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
+                                                           Text="{Binding DisplayIndex}" />
+                                            </StackPanel>
                                             <TextBlock Grid.Column="1"
                                                        Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
                                                        Text="{Binding TimeLabel}" />
-                                            <Border Grid.Column="2"
-                                                    Style="{StaticResource WebSocketFlowDirectionIconBorderStyle}"
-                                                    ToolTip="{Binding DirectionLabel}">
-                                                <Path Style="{StaticResource WebSocketFlowDirectionIconPathStyle}" />
-                                            </Border>
-                                            <TextBlock Grid.Column="3"
+                                            <TextBlock Grid.Column="2"
                                                        Style="{StaticResource WebSocketFlowTypeTextStyle}"
                                                        Text="{Binding FlowTypeLabel}" />
-                                            <TextBlock Grid.Column="4"
+                                            <TextBlock Grid.Column="3"
                                                        Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
-                                                       Text="{Binding LengthLabel}" />
-                                            <TextBlock Grid.Column="5"
+                                                       Text="{Binding Length}" />
+                                            <TextBlock Grid.Column="4"
                                                        Style="{StaticResource WebSocketFlowCellTextStyle}"
                                                        ToolTip="{Binding PreviewTextShort}"
-                                                       TextTrimming="CharacterEllipsis">
-                                                <TextBlock.Inlines>
-                                                    <Run Text="{Binding FrameTitle, Mode=OneWay}" FontWeight="SemiBold" />
-                                                    <Run Foreground="{StaticResource TextSecondaryBrush}" Text=" · " />
-                                                    <Run Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding PreviewTextShort, Mode=OneWay}" />
-                                                </TextBlock.Inlines>
-                                            </TextBlock>
+                                                       Text="{Binding PreviewTextShort}" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -742,7 +648,7 @@
 
                         <Border x:Name="FramesEmptyPanel"
                                 Grid.RowSpan="2"
-                                Margin="8,0,8,0"
+                                Margin="0"
                                 Background="Transparent"
                                 CornerRadius="0"
                                 IsHitTestVisible="False">
@@ -1599,6 +1505,5 @@
                     </Grid>
                 </Grid>
             </Border>
-        </Grid>
     </Grid>
 </UserControl>

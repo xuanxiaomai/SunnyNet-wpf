@@ -176,7 +176,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     public ObservableCollection<RequestCertificateRuleItem> RequestCertificateItems { get; } = new();
     public ObservableCollection<ProcessCaptureNameItem> ProcessCaptureNames { get; } = new();
     public ObservableCollection<RunningProcessItem> RunningProcesses { get; } = new();
-    public bool IsRefreshingSessionFilters { get; private set; }
+    private int _filterSelectionGuard;
+
+    public bool IsRefreshingSessionFilters => _filterSelectionGuard > 0;
 
     public AsyncRelayCommand ClearAllCommand { get; }
     public AsyncRelayCommand ReleaseAllCommand { get; }
@@ -574,14 +576,27 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     {
         if (!ReplaceSelectedFilterKeys(_selectedDomainFilterKeys, keys, AllDomainFilterKey))
         {
-            ApplySelectionToFilterItems(DomainFilters, _selectedDomainFilterKeys);
+            SyncDomainFilterSelection();
             return;
         }
 
-        ApplySelectionToFilterItems(DomainFilters, _selectedDomainFilterKeys);
+        SyncDomainFilterSelection();
         RefreshSessionView();
         OnPropertyChanged(nameof(SelectedDomainFilterKey));
         OnPropertyChanged(nameof(HasActiveSessionFilter));
+    }
+
+    private void SyncDomainFilterSelection()
+    {
+        BeginRefreshingSessionFilters();
+        try
+        {
+            ApplySelectionToFilterItems(DomainFilters, _selectedDomainFilterKeys);
+        }
+        finally
+        {
+            EndRefreshingSessionFilters();
+        }
     }
 
     public void SetSelectedMethodFilters(IEnumerable<string> keys)
@@ -600,14 +615,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     private void SyncMethodFilterSelection()
     {
-        IsRefreshingSessionFilters = true;
+        BeginRefreshingSessionFilters();
         try
         {
             ApplySelectionToFilterItems(MethodFilters, _selectedMethodFilterKeys);
         }
         finally
         {
-            IsRefreshingSessionFilters = false;
+            EndRefreshingSessionFilters();
         }
     }
 
@@ -2917,7 +2932,37 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
         Detail.SocketProtocol = protocol;
         Detail.IsSocketSession = true;
-        Detail.SocketEntries.AddRange(newEntries);
+        InsertSocketEntriesBeforeClose(newEntries);
+    }
+
+    private void InsertSocketEntriesBeforeClose(List<SocketEntry> newEntries)
+    {
+        int closeIndex = -1;
+        for (int index = 0; index < Detail.SocketEntries.Count; index++)
+        {
+            if (string.Equals(Detail.SocketEntries[index].Icon, "websocket_close", StringComparison.OrdinalIgnoreCase))
+            {
+                closeIndex = index;
+                break;
+            }
+        }
+
+        if (closeIndex < 0)
+        {
+            Detail.SocketEntries.AddRange(newEntries);
+            return;
+        }
+
+        foreach (SocketEntry entry in newEntries)
+        {
+            if (string.Equals(entry.Icon, "websocket_close", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            Detail.SocketEntries.Insert(closeIndex, entry);
+            closeIndex++;
+        }
     }
 
     private void ApplyConfig(JsonElement args)
@@ -3301,18 +3346,39 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     public void ClearSessionFilters()
     {
-        _selectedProcessFilterKeys.Clear();
-        _selectedDomainFilterKeys.Clear();
-        _selectedMethodFilterKeys.Clear();
-        ShowSearchResultsOnly = false;
-        ApplySelectionToFilterItems(ProcessFilters, _selectedProcessFilterKeys);
-        ApplySelectionToFilterItems(DomainFilters, _selectedDomainFilterKeys);
-        ApplySelectionToFilterItems(MethodFilters, _selectedMethodFilterKeys);
-        ApplySearchResultFilterSelection();
-        RefreshSessionFilterItems();
-        OnPropertyChanged(nameof(SelectedProcessFilterKey));
-        OnPropertyChanged(nameof(SelectedDomainFilterKey));
-        OnPropertyChanged(nameof(HasActiveSessionFilter));
+        BeginRefreshingSessionFilters();
+        try
+        {
+            _selectedProcessFilterKeys.Clear();
+            _selectedDomainFilterKeys.Clear();
+            _selectedMethodFilterKeys.Clear();
+            ShowSearchResultsOnly = false;
+            ApplySelectionToFilterItems(ProcessFilters, _selectedProcessFilterKeys);
+            ApplySelectionToFilterItems(DomainFilters, _selectedDomainFilterKeys);
+            ApplySelectionToFilterItems(MethodFilters, _selectedMethodFilterKeys);
+            ApplySearchResultFilterSelection();
+            RefreshSessionFilterItems(refreshSessionView: false);
+            OnPropertyChanged(nameof(SelectedProcessFilterKey));
+            OnPropertyChanged(nameof(SelectedDomainFilterKey));
+            OnPropertyChanged(nameof(HasActiveSessionFilter));
+        }
+        finally
+        {
+            EndRefreshingSessionFilters();
+        }
+    }
+
+    private void BeginRefreshingSessionFilters()
+    {
+        _filterSelectionGuard++;
+    }
+
+    private void EndRefreshingSessionFilters()
+    {
+        if (_filterSelectionGuard > 0)
+        {
+            _filterSelectionGuard--;
+        }
     }
 
     public void ClearSessionDecorations()
@@ -3429,17 +3495,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
             ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) { SearchResultFilterKey }
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
-        IsRefreshingSessionFilters = true;
+        BeginRefreshingSessionFilters();
         try
         {
-            ReplaceRows(ProcessFilters, processItems);
-            ReplaceRows(DomainFilters, domainItems);
-            ReplaceRows(MethodFilters, methodItems);
-            ReplaceRows(SearchResultFilters, searchItems);
+            SyncSessionFilterItems(ProcessFilters, processItems);
+            SyncSessionFilterItems(DomainFilters, domainItems);
+            SyncSessionFilterItems(MethodFilters, methodItems);
+            SyncSessionFilterItems(SearchResultFilters, searchItems);
         }
         finally
         {
-            IsRefreshingSessionFilters = false;
+            EndRefreshingSessionFilters();
         }
 
         if (refreshSessionView)
@@ -5194,6 +5260,44 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         return builder.ToString().Trim();
+    }
+
+    private static void SyncSessionFilterItems(ObservableCollection<SessionFilterItem> collection, IReadOnlyList<SessionFilterItem> next)
+    {
+        Dictionary<string, SessionFilterItem> nextMap = next.ToDictionary(static item => item.Key, StringComparer.OrdinalIgnoreCase);
+
+        for (int index = collection.Count - 1; index >= 0; index--)
+        {
+            if (!nextMap.ContainsKey(collection[index].Key))
+            {
+                collection.RemoveAt(index);
+            }
+        }
+
+        HashSet<string> existingKeys = collection
+            .Select(static item => item.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (SessionFilterItem item in collection)
+        {
+            if (!nextMap.TryGetValue(item.Key, out SessionFilterItem? updated))
+            {
+                continue;
+            }
+
+            item.Count = updated.Count;
+            item.IsSelected = updated.IsSelected;
+        }
+
+        foreach (SessionFilterItem item in next)
+        {
+            if (existingKeys.Contains(item.Key))
+            {
+                continue;
+            }
+
+            collection.Add(item);
+        }
     }
 
     private static void ReplaceRows<T>(ObservableCollection<T> collection, IEnumerable<T> rows)
