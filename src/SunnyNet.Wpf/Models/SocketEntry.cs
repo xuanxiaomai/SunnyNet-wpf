@@ -7,6 +7,7 @@ namespace SunnyNet.Wpf.Models;
 
 public sealed class SocketEntry : ViewModelBase
 {
+    public const string StrikeTagColor = CaptureEntry.StrikeTagColor;
     private static readonly Brush DefaultCardBackgroundBrush = CreateDefaultCardBackground();
     private int _index;
     private int _theology;
@@ -16,6 +17,7 @@ public sealed class SocketEntry : ViewModelBase
     private int _length;
     private string _type = "";
     private string _searchColor = "";
+    private string _tagColor = "";
 
     [JsonPropertyName("#")]
     public int Index
@@ -110,12 +112,29 @@ public sealed class SocketEntry : ViewModelBase
         {
             if (SetProperty(ref _searchColor, value ?? ""))
             {
-                OnPropertyChanged(nameof(CardBackground));
-                OnPropertyChanged(nameof(SearchBorderBrush));
-                OnPropertyChanged(nameof(HasSearchHighlight));
+                RaiseMarkVisualsChanged();
             }
         }
     }
+
+    [JsonIgnore]
+    public string TagColor
+    {
+        get => _tagColor;
+        set
+        {
+            if (SetProperty(ref _tagColor, value ?? ""))
+            {
+                RaiseMarkVisualsChanged();
+            }
+        }
+    }
+
+    [JsonIgnore]
+    public bool HasTagColor => !string.IsNullOrWhiteSpace(TagColor);
+
+    [JsonIgnore]
+    public bool IsStrikeMarked => string.Equals(TagColor, StrikeTagColor, StringComparison.Ordinal);
 
     [JsonIgnore]
     public int DisplayIndex => Index > 0 ? Index : 0;
@@ -154,12 +173,12 @@ public sealed class SocketEntry : ViewModelBase
     };
 
     [JsonIgnore]
-    public string FrameTitle => TypeLabel switch
+    public string FrameTitle => TypeKind switch
     {
         "Text" => "文本消息",
         "Binary" => "二进制消息",
-        "Ping" => "Ping 心跳",
-        "Pong" => "Pong 应答",
+        "ping" => "Ping 心跳",
+        "pong" => "Pong 应答",
         "Close" => "Close 关闭",
         _ => Icon switch
         {
@@ -170,22 +189,22 @@ public sealed class SocketEntry : ViewModelBase
     };
 
     [JsonIgnore]
-    public string OpcodeLabel => TypeLabel switch
+    public string OpcodeLabel => TypeKind switch
     {
         "Text" => "OP 0x1",
         "Binary" => "OP 0x2",
         "Close" => "OP 0x8",
-        "Ping" => "OP 0x9",
-        "Pong" => "OP 0xA",
+        "ping" => "OP 0x9",
+        "pong" => "OP 0xA",
         _ => IsStatusFrame ? "EVENT" : "OP ?"
     };
 
     [JsonIgnore]
-    public string FrameGroupLabel => TypeLabel switch
+    public string FrameGroupLabel => TypeKind switch
     {
         "Text" => "DATA",
         "Binary" => "BINARY",
-        "Ping" or "Pong" or "Close" => "CONTROL",
+        "ping" or "pong" or "Close" => "CONTROL",
         _ => IsStatusFrame ? "STATUS" : "FRAME"
     };
 
@@ -193,7 +212,25 @@ public sealed class SocketEntry : ViewModelBase
     public string TimeLabel => string.IsNullOrWhiteSpace(Time) ? "--:--:--.---" : Time;
 
     [JsonIgnore]
-    public string TypeLabel => string.IsNullOrWhiteSpace(Type) ? "未知" : Type;
+    public string TypeKind => NormalizeWsTypeKind(Type);
+
+    [JsonIgnore]
+    public string TypeLabel
+    {
+        get
+        {
+            string kind = TypeKind;
+            return kind switch
+            {
+                "ping" => "ping",
+                "pong" => "pong",
+                "Binary" => "Binary",
+                "Text" => "Text",
+                "Close" => "Close",
+                _ => string.IsNullOrWhiteSpace(Type) ? "未知" : Type
+            };
+        }
+    }
 
     [JsonIgnore]
     public string FlowTypeLabel => IsStatusFrame ? "事件" : TypeLabel;
@@ -231,6 +268,33 @@ public sealed class SocketEntry : ViewModelBase
     }
 
     [JsonIgnore]
+    public string DataHexPreview
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Data))
+            {
+                return "";
+            }
+
+            return CompactPreviewText(FormatDataAsSpacedHex(Data));
+        }
+    }
+
+    [JsonIgnore]
+    public string DataColumnPreview => IsTextMessageType(Type) ? PreviewText : DataHexPreview;
+
+    [JsonIgnore]
+    public string DataColumnPreviewShort
+    {
+        get
+        {
+            string preview = DataColumnPreview;
+            return preview.Length <= 180 ? preview : preview[..180] + "...";
+        }
+    }
+
+    [JsonIgnore]
     public bool IsStatusFrame => Icon is "websocket_connect" or "websocket_close";
 
     [JsonIgnore]
@@ -243,25 +307,54 @@ public sealed class SocketEntry : ViewModelBase
     public bool IsReceiveFrame => Icon is "下行" or "拦截下行";
 
     [JsonIgnore]
-    public bool IsTextFrame => string.Equals(Type, "Text", StringComparison.OrdinalIgnoreCase);
+    public bool IsTextFrame => IsTextMessageType(Type);
 
     [JsonIgnore]
-    public bool IsBinaryFrame => string.Equals(Type, "Binary", StringComparison.OrdinalIgnoreCase);
+    public bool IsBinaryFrame => IsBinaryMessageType(Type);
 
     [JsonIgnore]
-    public bool IsControlFrame =>
-        string.Equals(Type, "Ping", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(Type, "Pong", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(Type, "Close", StringComparison.OrdinalIgnoreCase);
+    public bool IsControlFrame => TypeKind is "ping" or "pong" or "Close";
 
     [JsonIgnore]
     public bool HasSearchHighlight => !string.IsNullOrWhiteSpace(SearchColor);
 
     [JsonIgnore]
-    public Brush CardBackground => CreateSearchBrush(SearchColor, DefaultCardBackgroundBrush, 0.34);
+    public Brush CardBackground
+    {
+        get
+        {
+            if (HasSearchHighlight)
+            {
+                return CreateSearchBrush(SearchColor, DefaultCardBackgroundBrush, 0.34);
+            }
+
+            if (HasTagColor && !IsStrikeMarked)
+            {
+                return CreateSearchBrush(TagColor, DefaultCardBackgroundBrush, 0.22);
+            }
+
+            return DefaultCardBackgroundBrush;
+        }
+    }
 
     [JsonIgnore]
-    public Brush SearchBorderBrush => CreateSearchBrush(SearchColor, new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE4, 0xEB, 0xF5)), 0.7);
+    public Brush SearchBorderBrush
+    {
+        get
+        {
+            if (HasSearchHighlight)
+            {
+                return CreateSearchBrush(SearchColor, new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE4, 0xEB, 0xF5)), 0.7);
+            }
+
+            if (HasTagColor && !IsStrikeMarked)
+            {
+                return CreateSearchBrush(TagColor, new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE4, 0xEB, 0xF5)), 0.55);
+            }
+
+            return new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE4, 0xEB, 0xF5));
+        }
+    }
 
     private void RaiseDerivedProperties()
     {
@@ -274,11 +367,15 @@ public sealed class SocketEntry : ViewModelBase
         OnPropertyChanged(nameof(OpcodeLabel));
         OnPropertyChanged(nameof(FrameGroupLabel));
         OnPropertyChanged(nameof(TimeLabel));
+        OnPropertyChanged(nameof(TypeKind));
         OnPropertyChanged(nameof(TypeLabel));
         OnPropertyChanged(nameof(FlowTypeLabel));
         OnPropertyChanged(nameof(LengthLabel));
         OnPropertyChanged(nameof(PreviewText));
         OnPropertyChanged(nameof(PreviewTextShort));
+        OnPropertyChanged(nameof(DataHexPreview));
+        OnPropertyChanged(nameof(DataColumnPreview));
+        OnPropertyChanged(nameof(DataColumnPreviewShort));
         OnPropertyChanged(nameof(IsStatusFrame));
         OnPropertyChanged(nameof(IsTrafficFrame));
         OnPropertyChanged(nameof(IsSendFrame));
@@ -286,7 +383,14 @@ public sealed class SocketEntry : ViewModelBase
         OnPropertyChanged(nameof(IsTextFrame));
         OnPropertyChanged(nameof(IsBinaryFrame));
         OnPropertyChanged(nameof(IsControlFrame));
+        RaiseMarkVisualsChanged();
+    }
+
+    private void RaiseMarkVisualsChanged()
+    {
         OnPropertyChanged(nameof(HasSearchHighlight));
+        OnPropertyChanged(nameof(HasTagColor));
+        OnPropertyChanged(nameof(IsStrikeMarked));
         OnPropertyChanged(nameof(CardBackground));
         OnPropertyChanged(nameof(SearchBorderBrush));
     }
@@ -366,9 +470,72 @@ public sealed class SocketEntry : ViewModelBase
         return data;
     }
 
+    private static bool IsTextMessageType(string? type)
+    {
+        return NormalizeWsTypeKind(type) == "Text";
+    }
+
+    private static bool IsBinaryMessageType(string? type)
+    {
+        return NormalizeWsTypeKind(type) == "Binary";
+    }
+
+    private static string NormalizeWsTypeKind(string? type)
+    {
+        string value = (type ?? "").Trim();
+        return value.ToLowerInvariant() switch
+        {
+            "1" or "text" or "文本" => "Text",
+            "2" or "binary" or "二进制" => "Binary",
+            "8" or "close" => "Close",
+            "9" or "ping" => "ping",
+            "10" or "pong" => "pong",
+            _ => value
+        };
+    }
+
     private static string CompactPreviewText(string text)
     {
         return text.Replace('\0', ' ').Replace('\r', ' ').Replace('\n', ' ');
+    }
+
+    private static string FormatDataAsSpacedHex(string data)
+    {
+        string working = data.Trim();
+        string prefix = "";
+        if (working.StartsWith("[手动发送]", StringComparison.Ordinal)
+            || working.StartsWith("[手动接收]", StringComparison.Ordinal))
+        {
+            int split = working.IndexOf(']');
+            if (split >= 0)
+            {
+                prefix = working[..(split + 1)] + " ";
+                working = working[(split + 1)..].Trim();
+            }
+        }
+
+        bool truncated = working.EndsWith("...", StringComparison.Ordinal);
+        if (truncated)
+        {
+            working = working[..^3].Trim();
+        }
+
+        if (!TryParseSpacedHex(working, out byte[] bytes))
+        {
+            bytes = Encoding.UTF8.GetBytes(working);
+        }
+
+        return prefix + ToSpacedHex(bytes) + (truncated ? " ..." : "");
+    }
+
+    private static string ToSpacedHex(byte[] bytes)
+    {
+        if (bytes.Length == 0)
+        {
+            return "";
+        }
+
+        return string.Join(" ", bytes.Select(static value => value.ToString("x2")));
     }
 
     private static bool TryParseSpacedHex(string text, out byte[] bytes)

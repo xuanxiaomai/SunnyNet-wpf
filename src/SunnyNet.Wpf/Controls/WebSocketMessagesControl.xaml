@@ -123,33 +123,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="WebSocketFlowTypeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource WebSocketFlowCellTextStyle}">
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Type}" Value="Text">
-                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Binary">
-                    <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Ping">
-                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Pong">
-                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Close">
-                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Icon}" Value="websocket_connect">
-                    <Setter Property="Foreground" Value="#7B4DE0" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Icon}" Value="websocket_close">
-                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+        <Style x:Key="WebSocketFlowTypeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource WebSocketFlowMonoCellTextStyle}" />
 
         <Style x:Key="WebSocketPayloadSideTabItemStyle" TargetType="TabItem">
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
@@ -303,23 +277,23 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Type}" Value="Text">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Text">
                     <Setter Property="Background" Value="#ECFDF3" />
                     <Setter Property="BorderBrush" Value="#CFEEDB" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Binary">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Binary">
                     <Setter Property="Background" Value="#FFF6E8" />
                     <Setter Property="BorderBrush" Value="#FFE2B7" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Ping">
+                <DataTrigger Binding="{Binding TypeKind}" Value="ping">
                     <Setter Property="Background" Value="#EEF4FF" />
                     <Setter Property="BorderBrush" Value="#D8E7FF" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Pong">
+                <DataTrigger Binding="{Binding TypeKind}" Value="pong">
                     <Setter Property="Background" Value="#EEF4FF" />
                     <Setter Property="BorderBrush" Value="#D8E7FF" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Close">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Close">
                     <Setter Property="Background" Value="#FDECEC" />
                     <Setter Property="BorderBrush" Value="#F7CDCF" />
                 </DataTrigger>
@@ -330,19 +304,19 @@
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Type}" Value="Text">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Text">
                     <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Binary">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Binary">
                     <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Ping">
+                <DataTrigger Binding="{Binding TypeKind}" Value="ping">
                     <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Pong">
+                <DataTrigger Binding="{Binding TypeKind}" Value="pong">
                     <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Close">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Close">
                     <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -357,16 +331,16 @@
                 <DataTrigger Binding="{Binding Icon}" Value="下行">
                     <Setter Property="Background" Value="#4D7FFF" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Binary">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Binary">
                     <Setter Property="Background" Value="#E8A23B" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Ping">
+                <DataTrigger Binding="{Binding TypeKind}" Value="ping">
                     <Setter Property="Background" Value="#5F8DF6" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Pong">
+                <DataTrigger Binding="{Binding TypeKind}" Value="pong">
                     <Setter Property="Background" Value="#4D7FFF" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Close">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Close">
                     <Setter Property="Background" Value="#E66C73" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Icon}" Value="websocket_connect">
@@ -384,23 +358,23 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Type}" Value="Text">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Text">
                     <Setter Property="Background" Value="#F0FAF5" />
                     <Setter Property="BorderBrush" Value="#D2ECDD" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Binary">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Binary">
                     <Setter Property="Background" Value="#FFF7E9" />
                     <Setter Property="BorderBrush" Value="#FFE2B7" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Ping">
+                <DataTrigger Binding="{Binding TypeKind}" Value="ping">
                     <Setter Property="Background" Value="#EEF4FF" />
                     <Setter Property="BorderBrush" Value="#D8E7FF" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Pong">
+                <DataTrigger Binding="{Binding TypeKind}" Value="pong">
                     <Setter Property="Background" Value="#EEF4FF" />
                     <Setter Property="BorderBrush" Value="#D8E7FF" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Close">
+                <DataTrigger Binding="{Binding TypeKind}" Value="Close">
                     <Setter Property="Background" Value="#FDECEC" />
                     <Setter Property="BorderBrush" Value="#F7CDCF" />
                 </DataTrigger>
@@ -589,8 +563,23 @@
                                     <MenuItem x:Name="CopyFrameTextMenuItem" Header="复制消息文本" Click="CopySelectedFrameText_Click" />
                                     <MenuItem x:Name="CopyFrameJsonMenuItem" Header="复制 JSON" Click="CopySelectedFrameJson_Click" />
                                     <MenuItem x:Name="CopyFrameHexMenuItem" Header="复制消息 HEX" Click="CopySelectedFrameHex_Click" />
+                                    <MenuItem Header="标记颜色">
+                                        <MenuItem Header="删除线" InputGestureText="Minus" Tag="__strike__" Click="MarkSelectedFrames_Click" />
+                                        <Separator />
+                                        <MenuItem Header="红色" InputGestureText="Ctrl+1" Tag="#FF5252" Click="MarkSelectedFrames_Click" />
+                                        <MenuItem Header="蓝色" InputGestureText="Ctrl+2" Tag="#2F7CF6" Click="MarkSelectedFrames_Click" />
+                                        <MenuItem Header="金色" InputGestureText="Ctrl+3" Tag="#F4B400" Click="MarkSelectedFrames_Click" />
+                                        <MenuItem Header="绿色" InputGestureText="Ctrl+4" Tag="#22A06B" Click="MarkSelectedFrames_Click" />
+                                        <MenuItem Header="橙色" InputGestureText="Ctrl+5" Tag="#FF8A00" Click="MarkSelectedFrames_Click" />
+                                        <MenuItem Header="紫色" InputGestureText="Ctrl+6" Tag="#8B5CF6" Click="MarkSelectedFrames_Click" />
+                                        <Separator />
+                                        <MenuItem Header="取消标记" InputGestureText="Ctrl+0" Tag="" Click="MarkSelectedFrames_Click" />
+                                    </MenuItem>
                                     <Separator />
-                                    <MenuItem x:Name="JumpToLatestMenuItem" Header="定位到最新消息" Click="JumpToLatest_Click" />
+                                    <MenuItem x:Name="AutoScrollMenuItem"
+                                              Header="自动滚动"
+                                              IsCheckable="True"
+                                              Click="AutoScrollMenuItem_Click" />
                                 </ContextMenu>
                             </ListBox.ContextMenu>
                             <ListBox.ItemTemplate>
@@ -637,9 +626,19 @@
                                                        Style="{StaticResource WebSocketFlowMonoCellTextStyle}"
                                                        Text="{Binding Length}" />
                                             <TextBlock Grid.Column="4"
-                                                       Style="{StaticResource WebSocketFlowCellTextStyle}"
-                                                       ToolTip="{Binding PreviewTextShort}"
-                                                       Text="{Binding PreviewTextShort}" />
+                                                       ToolTip="{Binding DataColumnPreviewShort}"
+                                                       Text="{Binding DataColumnPreviewShort}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource WebSocketFlowMonoCellTextStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsStrikeMarked}" Value="True">
+                                                                <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                <Setter Property="Opacity" Value="0.55" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

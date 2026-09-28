@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using SunnyNet.Wpf.Models;
 using SunnyNet.Wpf.Services;
@@ -40,6 +41,8 @@ public partial class PacketMessagesControl : UserControl
     private CollectionViewSource? _entriesViewSource;
     private readonly Dictionary<string, PacketPayloadSnapshot> _payloadCache = new(StringComparer.Ordinal);
     private bool _syncingSelectedEntry;
+    private bool _autoScrollEnabled;
+    private bool _suppressAutoScrollOnSessionOpen;
     private bool _suspendPacketReplayEditorEvents;
     private bool _packetReplayEditorDirty;
     private int _payloadVersion;
@@ -57,6 +60,7 @@ public partial class PacketMessagesControl : UserControl
             SetComboBoxSelectionByTag(PacketReplayDirectionComboBox, "Server");
             RebuildEntriesView();
             RefreshState();
+            ScrollPacketsToTop();
             ApplyExternalSelection(SelectedEntry);
         };
     }
@@ -120,8 +124,10 @@ public partial class PacketMessagesControl : UserControl
         }
 
         control._payloadCache.Clear();
+        control.PrepareOpenedSession();
         control.RebuildEntriesView();
         control.RefreshState();
+        control.ScrollPacketsToTop();
     }
 
     private static void OnTheologyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
@@ -129,6 +135,9 @@ public partial class PacketMessagesControl : UserControl
         if (dependencyObject is PacketMessagesControl control)
         {
             control._payloadCache.Clear();
+            control.PrepareOpenedSession();
+            control.RefreshState();
+            control.ScrollPacketsToTop();
             control.ApplyExternalSelection(control.SelectedEntry);
         }
     }
@@ -167,7 +176,35 @@ public partial class PacketMessagesControl : UserControl
             _payloadCache.Clear();
         }
 
+        if (IsInspectorMode)
+        {
+            _suppressAutoScrollOnSessionOpen = false;
+            RefreshState();
+            return;
+        }
+
+        if (args.Action == NotifyCollectionChangedAction.Reset && _suppressAutoScrollOnSessionOpen)
+        {
+            _suppressAutoScrollOnSessionOpen = false;
+            RefreshState();
+            if (_autoScrollEnabled)
+            {
+                SelectLatestVisiblePacket();
+            }
+            else
+            {
+                ScrollPacketsToTop();
+            }
+
+            return;
+        }
+
+        _suppressAutoScrollOnSessionOpen = false;
         RefreshState();
+        if (_autoScrollEnabled)
+        {
+            SelectLatestVisiblePacket();
+        }
     }
 
     private void ApplyDisplayModeVisualState()
@@ -923,6 +960,88 @@ public partial class PacketMessagesControl : UserControl
         CopyPacketTextMenuItem.IsEnabled = hasSelection;
         CopyPacketHexMenuItem.IsEnabled = hasSelection;
         CopyPacketBase64MenuItem.IsEnabled = hasSelection;
+        SyncAutoScrollMenu();
+    }
+
+    private void AutoScrollMenuItem_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        _autoScrollEnabled = AutoScrollMenuItem.IsChecked == true;
+        if (_autoScrollEnabled)
+        {
+            SelectLatestVisiblePacket();
+        }
+    }
+
+    private void PrepareOpenedSession()
+    {
+        _autoScrollEnabled = false;
+        _suppressAutoScrollOnSessionOpen = true;
+        SyncAutoScrollMenu();
+    }
+
+    private void SyncAutoScrollMenu()
+    {
+        if (AutoScrollMenuItem is null)
+        {
+            return;
+        }
+
+        AutoScrollMenuItem.IsChecked = _autoScrollEnabled;
+    }
+
+    private void SelectLatestVisiblePacket()
+    {
+        if (PacketsList is null || PacketsList.Items.Count <= 0)
+        {
+            return;
+        }
+
+        PacketsList.SelectedIndex = PacketsList.Items.Count - 1;
+        PacketsList.ScrollIntoView(PacketsList.SelectedItem);
+    }
+
+    private void ScrollPacketsToTop()
+    {
+        if (PacketsList is null)
+        {
+            return;
+        }
+
+        PacketsList.Dispatcher.BeginInvoke(() =>
+        {
+            if (PacketsList.Items.Count <= 0)
+            {
+                return;
+            }
+
+            if (FindVisualChild<ScrollViewer>(PacketsList) is { } viewer)
+            {
+                viewer.ScrollToHome();
+                return;
+            }
+
+            PacketsList.ScrollIntoView(PacketsList.Items[0]);
+        }, DispatcherPriority.Loaded);
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        int count = VisualTreeHelper.GetChildrenCount(parent);
+        for (int index = 0; index < count; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T match)
+            {
+                return match;
+            }
+
+            if (FindVisualChild<T>(child) is { } nested)
+            {
+                return nested;
+            }
+        }
+
+        return null;
     }
 
     private void CopyPacketSummary_Click(object sender, RoutedEventArgs routedEventArgs)

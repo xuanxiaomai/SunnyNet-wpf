@@ -13,6 +13,24 @@
             <Setter Property="Padding" Value="6,3" />
             <Setter Property="MinHeight" Value="26" />
         </Style>
+        <Style x:Key="EditorActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="EditorPrimaryActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="EditorBrowseButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinWidth" Value="86" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
     </Window.Resources>
     <Grid Margin="18">
         <Grid.RowDefinitions>
@@ -104,14 +122,16 @@
                 <TextBlock VerticalAlignment="Center" Text="用作替换的内容：" />
                 <CheckBox x:Name="FileHexCheckBox"
                           DockPanel.Dock="Right"
+                          VerticalAlignment="Center"
                           Content="使用 HEX 解码解析" />
                 <Button x:Name="BrowseFileButton"
                         DockPanel.Dock="Right"
-                        Width="36"
-                        Height="28"
                         Margin="8,0"
+                        VerticalAlignment="Center"
                         Click="BrowseFile_Click"
-                        Content="..." />
+                        Content="选择文件"
+                        Style="{StaticResource EditorBrowseButtonStyle}"
+                        ToolTip="选择用于替换的文件" />
                 <TextBox x:Name="FilePathTextBox"
                          Height="28"
                          Margin="12,0,0,0"
@@ -130,17 +150,15 @@
                     Margin="0,14,0,0"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
-            <Button Width="88"
-                    Height="30"
-                    Margin="0,0,8,0"
+            <Button Margin="0,0,8,0"
                     Click="Accept_Click"
                     Content="添加规则"
-                    IsDefault="True" />
-            <Button Width="88"
-                    Height="30"
-                    Click="Cancel_Click"
+                    IsDefault="True"
+                    Style="{StaticResource EditorPrimaryActionButtonStyle}" />
+            <Button Click="Cancel_Click"
                     Content="关闭窗口"
-                    IsCancel="True" />
+                    IsCancel="True"
+                    Style="{StaticResource EditorActionButtonStyle}" />
         </StackPanel>
     </Grid>
 </Window>

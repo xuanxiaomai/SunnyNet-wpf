@@ -122,6 +122,11 @@
                             <MenuItem x:Name="CopyPacketTextMenuItem" Header="复制包文本" Click="CopyPacketText_Click" />
                             <MenuItem x:Name="CopyPacketHexMenuItem" Header="复制包 HEX" Click="CopyPacketHex_Click" />
                             <MenuItem x:Name="CopyPacketBase64MenuItem" Header="复制包 Base64" Click="CopyPacketBase64_Click" />
+                            <Separator />
+                            <MenuItem x:Name="AutoScrollMenuItem"
+                                      Header="自动滚动"
+                                      IsCheckable="True"
+                                      Click="AutoScrollMenuItem_Click" />
                         </ContextMenu>
                     </ListBox.ContextMenu>
                     <ListBox.ItemTemplate>
@@ -159,8 +164,9 @@
                                     <TextBlock Grid.Column="2" Style="{StaticResource PacketDirectionTextStyle}" Text="{Binding DirectionLabel}" />
                                     <TextBlock Grid.Column="3" Style="{StaticResource PacketMonoCellTextStyle}" Text="{Binding Length}" />
                                     <TextBlock Grid.Column="4"
-                                               Style="{StaticResource PacketCellTextStyle}"
-                                               Text="{Binding PreviewTextShort}" />
+                                               Style="{StaticResource PacketMonoCellTextStyle}"
+                                               ToolTip="{Binding DataColumnPreviewShort}"
+                                               Text="{Binding DataColumnPreviewShort}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>

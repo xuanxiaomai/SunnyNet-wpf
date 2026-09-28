@@ -69,7 +69,7 @@ public partial class SettingsWindow : Window
             "Mcp" => ("MCP 集成", "内置本机 MCP 服务与客户端配置。"),
             "Ssl" => ("SSL 证书", "配置默认证书或自定义 CA / KEY 文件。"),
             "MustTcp" => ("强制走 TCP", "通过规则控制指定流量强制转为 TCP。"),
-            "Proxy" => ("上游网关", "设置上游代理地址以及命中规则。"),
+            "Proxy" => ("上游网关", "启用后请求经上游代理提交。"),
             "Hosts" => ("HOSTS 设置", "维护域名映射规则，命中后直接重定向。"),
             "Script" => ("脚本编辑", "格式化、恢复默认并保存 Go 核心脚本。"),
             "Process" => ("进程拦截", "加载驱动、指定进程名或按PID精准捕获。"),
@@ -165,14 +165,34 @@ public partial class SettingsWindow : Window
         await RunActionAsync(() => _viewModel.ApplyMustTcpSettingsAsync());
     }
 
+    private async void ModifyProxy_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        await RunActionAsync(() => _viewModel.ModifySelectedUpstreamProxyAsync());
+    }
+
+    private async void AddProxy_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        await RunActionAsync(() => _viewModel.AddUpstreamProxyAsync());
+    }
+
     private async void EnableProxy_Click(object sender, RoutedEventArgs routedEventArgs)
     {
-        await RunActionAsync(() => _viewModel.ApplyProxySettingsAsync(true));
+        await RunActionAsync(() => _viewModel.EnableUpstreamProxyAsync(_viewModel.SelectedUpstreamProxy));
     }
 
     private async void DisableProxy_Click(object sender, RoutedEventArgs routedEventArgs)
     {
-        await RunActionAsync(() => _viewModel.ApplyProxySettingsAsync(false));
+        await RunActionAsync(() => _viewModel.DisableUpstreamProxyAsync(_viewModel.SelectedUpstreamProxy));
+    }
+
+    private async void RemoveProxy_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        await RunActionAsync(() => _viewModel.RemoveUpstreamProxyAsync(_viewModel.SelectedUpstreamProxy));
+    }
+
+    private async void ProxyRules_LostFocus(object sender, RoutedEventArgs routedEventArgs)
+    {
+        await RunActionAsync(() => _viewModel.ApplyProxyRulesAsync());
     }
 
     private async void ApplyCert_Click(object sender, RoutedEventArgs routedEventArgs)
@@ -412,9 +432,16 @@ public partial class SettingsWindow : Window
 
         if (!row.IsSelected)
         {
-            grid.SelectedItems.Clear();
-            row.IsSelected = true;
-            grid.SelectedItem = row.Item;
+            if (grid.SelectionMode == DataGridSelectionMode.Single)
+            {
+                grid.SelectedItem = row.Item;
+            }
+            else
+            {
+                grid.SelectedItems.Clear();
+                row.IsSelected = true;
+                grid.SelectedItem = row.Item;
+            }
         }
 
         row.Focus();

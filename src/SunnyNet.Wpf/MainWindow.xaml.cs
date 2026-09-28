@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using Microsoft.Win32;
+using SunnyNet.Wpf.Controls;
 using SunnyNet.Wpf.Models;
 using SunnyNet.Wpf.Services;
 using SunnyNet.Wpf.ViewModels;
@@ -32,7 +33,6 @@ public partial class MainWindow : Window
     private DetailZoomMode _detailZoomMode;
     private bool _isInitializingLayout = true;
     private bool _restoreWindowMaximized;
-    private bool _isUpdatingCaptureScope;
     private bool _isCloseConfirmed;
     private bool _isCloseCleanupRunning;
     private bool _isApplyingMcpState;
@@ -53,7 +53,6 @@ public partial class MainWindow : Window
         ApplySavedColumnLayout();
         RequestDataPanel.Visibility = Visibility.Visible;
         ColumnPickerPanel.Visibility = Visibility.Collapsed;
-        ApplySavedCaptureScope();
         ApplySavedFavoriteSettings();
         ApplySavedProcessCaptureSettings();
         _isInitializingLayout = false;
@@ -856,6 +855,46 @@ public partial class MainWindow : Window
         new SettingsWindow(_viewModel) { Owner = this }.Show();
     }
 
+    private async void PickProcess_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        ProcessPickerWindow picker = new()
+        {
+            Owner = this
+        };
+
+        if (picker.ShowDialog() != true || string.IsNullOrWhiteSpace(picker.SelectedProcessName))
+        {
+            return;
+        }
+
+        try
+        {
+            await _viewModel.CaptureProcessesByNameAsync(picker.SelectedProcessName, picker.SelectedPid);
+        }
+        catch (Exception exception)
+        {
+            ViewModel_NotificationRequested("错误", exception.Message);
+        }
+    }
+
+    private async void PickProcess_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+    {
+        if (!_viewModel.CanClearPickedProcess)
+        {
+            return;
+        }
+
+        mouseButtonEventArgs.Handled = true;
+        try
+        {
+            await _viewModel.ClearPickedProcessCaptureAsync();
+        }
+        catch (Exception exception)
+        {
+            ViewModel_NotificationRequested("错误", exception.Message);
+        }
+    }
+
     private void SettingsProcess_Click(object sender, RoutedEventArgs routedEventArgs)
     {
         ShowProcessSettingsWindow();
@@ -1202,12 +1241,20 @@ public partial class MainWindow : Window
         }
 
         if (!IsEditableTextInputFocused()
-            && TryResolveSessionMarkShortcut(keyEventArgs, out string tagColor)
-            && GetSelectedSessionEntries().Length > 0)
+            && TryResolveSessionMarkShortcut(keyEventArgs, out string tagColor))
         {
-            _ = ApplySessionMarkAsync(tagColor);
-            keyEventArgs.Handled = true;
-            return;
+            if (TryMarkFocusedWebSocketMessages(tagColor))
+            {
+                keyEventArgs.Handled = true;
+                return;
+            }
+
+            if (GetSelectedSessionEntries().Length > 0)
+            {
+                _ = ApplySessionMarkAsync(tagColor);
+                keyEventArgs.Handled = true;
+                return;
+            }
         }
 
         if (keyEventArgs.Key != Key.F || Keyboard.Modifiers != ModifierKeys.Control)
@@ -1520,11 +1567,6 @@ public partial class MainWindow : Window
         SyncColumnPickerChecks();
     }
 
-    private void ApplySavedCaptureScope()
-    {
-        SetCaptureScopeMode(_layoutSettings.CaptureScopeMode, openSettings: false);
-    }
-
     private void ApplySavedFavoriteSettings()
     {
         _viewModel.InitializeFavoriteSettings(_layoutSettings.FavoriteSessionKeys);
@@ -1533,6 +1575,7 @@ public partial class MainWindow : Window
 
     private void ApplySavedProcessCaptureSettings()
     {
+        _viewModel.CaptureAllProcesses = _layoutSettings.CaptureAllProcesses;
         _viewModel.InitializeProcessCaptureNames(_layoutSettings.ProcessCaptureNames);
     }
 
@@ -1571,6 +1614,7 @@ public partial class MainWindow : Window
         _layoutSettings.ShowFavoritesOnly = false;
         _layoutSettings.FavoriteSessionKeys = _viewModel.GetFavoriteKeys().ToList();
         _layoutSettings.ProcessCaptureNames = _viewModel.GetProcessCaptureNameSettings().ToList();
+        _layoutSettings.CaptureAllProcesses = _viewModel.CaptureAllProcesses;
         UiLayoutSettingsStore.Save(_layoutSettings);
     }
 
@@ -2187,6 +2231,23 @@ public partial class MainWindow : Window
         }
     }
 
+    private bool TryMarkFocusedWebSocketMessages(string tagColor)
+    {
+        if (FindVisualParent<WebSocketMessagesControl>(Keyboard.FocusedElement as DependencyObject) is not { } control)
+        {
+            return false;
+        }
+
+        SocketEntry[] entries = control.GetSelectedEntries();
+        if (entries.Length == 0)
+        {
+            return false;
+        }
+
+        _viewModel.MarkSocketEntries(entries, tagColor);
+        return true;
+    }
+
     private async void EditSelectedSessionNotes_Click(object sender, RoutedEventArgs routedEventArgs)
     {
         CaptureEntry[] entries = GetSelectedSessionEntries();
@@ -2773,55 +2834,6 @@ public partial class MainWindow : Window
 
         keyEventArgs.Handled = true;
         await _viewModel.DeleteSessionsByDomainFiltersAsync(selectedKeys);
-    }
-
-    private void CaptureScopeButton_Click(object sender, RoutedEventArgs routedEventArgs)
-    {
-        if (sender is not ToggleButton { Tag: string mode })
-        {
-            return;
-        }
-
-        SetCaptureScopeMode(mode, openSettings: !_isInitializingLayout && string.Equals(mode, "Process", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private void SetCaptureScopeMode(string? mode, bool openSettings)
-    {
-        string normalizedMode = string.Equals(mode, "Process", StringComparison.OrdinalIgnoreCase) ? "Process" : "All";
-
-        bool isAll = string.Equals(normalizedMode, "All", StringComparison.Ordinal);
-        _isUpdatingCaptureScope = true;
-        try
-        {
-            CaptureScopeComboBox.SelectedIndex = isAll ? 0 : 1;
-        }
-        finally
-        {
-            _isUpdatingCaptureScope = false;
-        }
-
-        _layoutSettings.CaptureScopeMode = normalizedMode;
-
-        if (!_isInitializingLayout)
-        {
-            UiLayoutSettingsStore.Save(_layoutSettings);
-        }
-
-        if (openSettings && string.Equals(normalizedMode, "Process", StringComparison.Ordinal))
-        {
-            ShowProcessSettingsWindow();
-        }
-    }
-
-    private void CaptureScopeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
-    {
-        if (_isInitializingLayout || _isUpdatingCaptureScope)
-        {
-            return;
-        }
-
-        string mode = (CaptureScopeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "All";
-        SetCaptureScopeMode(mode, openSettings: string.Equals(mode, "Process", StringComparison.OrdinalIgnoreCase));
     }
 
     private void ShowProcessSettingsWindow()

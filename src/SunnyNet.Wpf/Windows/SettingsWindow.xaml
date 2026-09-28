@@ -260,6 +260,43 @@
             <Setter Property="Margin" Value="0,10,0,0" />
         </Style>
 
+        <Style x:Key="ProxyCompactTextBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SettingsCompactTextBoxStyle}">
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="ProxyCompactButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SettingsSmallActionButtonStyle}">
+            <Setter Property="MinWidth" Value="64" />
+            <Setter Property="MinHeight" Value="22" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+
+        <Style x:Key="ProxyDataGridRowStyle" TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                    <Setter Property="Foreground" Value="#9AA3B2" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProxyGridTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                    <Setter Property="Foreground" Value="#9AA3B2" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProxyDataGridStyle" TargetType="{x:Type DataGrid}" BasedOn="{StaticResource SettingsDataGridStyle}">
+            <Setter Property="RowHeight" Value="22" />
+            <Setter Property="MinRowHeight" Value="22" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="RowStyle" Value="{StaticResource ProxyDataGridRowStyle}" />
+        </Style>
+
         <Style x:Key="SettingsStateTextStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
@@ -765,22 +802,157 @@
                         </StackPanel>
 
                         <StackPanel x:Name="ProxySectionPanel" Visibility="Collapsed">
-                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="上游代理设置" />
-                            <TextBlock Margin="0,6,0,0" Style="{StaticResource SettingsPageHintTextStyle}" Text="配置代理地址，并通过规则控制命中流量。" />
-                            <TextBlock Margin="0,12,0,0" Style="{StaticResource FormLabelTextStyle}" Text="代理地址" />
-                            <TextBox Margin="0,6,0,0" Style="{StaticResource SettingsCompactTextBoxStyle}" Text="{Binding Settings.GlobalProxy}" />
-                            <TextBlock Margin="0,12,0,0" Style="{StaticResource FormLabelTextStyle}" Text="代理规则" />
-                            <TextBox Height="210"
-                                     Margin="0,6,0,0"
+                            <TextBlock Style="{StaticResource SettingsGroupTitleTextStyle}" Text="添加或修改选中代理" />
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="64" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="4" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="4" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="4" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal">
+                                    <RadioButton VerticalAlignment="Center"
+                                                 Content="Http代理"
+                                                 GroupName="UpstreamProxyKind"
+                                                 IsChecked="{Binding ProxyEditorIsHttp, Mode=TwoWay}" />
+                                    <RadioButton Margin="10,0,0,0"
+                                                 VerticalAlignment="Center"
+                                                 Content="S5代理"
+                                                 GroupName="UpstreamProxyKind"
+                                                 IsChecked="{Binding ProxyEditorIsSocks, Mode=TwoWay}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="3"
+                                           Width="58"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FormLabelTextStyle}"
+                                           Text="自动解析:" />
+                                <TextBox Grid.Column="4"
+                                         Style="{StaticResource ProxyCompactTextBoxStyle}"
+                                         Text="{Binding ProxyEditorParseText, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Grid.Row="2"
+                                           Width="58"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FormLabelTextStyle}"
+                                           Text="代理地址:" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="1"
+                                         Style="{StaticResource ProxyCompactTextBoxStyle}"
+                                         Text="{Binding ProxyEditorAddress, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2"
+                                           Grid.Column="3"
+                                           Width="58"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FormLabelTextStyle}"
+                                           Text="代理端口:" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="4"
+                                         Style="{StaticResource ProxyCompactTextBoxStyle}"
+                                         Text="{Binding ProxyEditorPort, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="2"
+                                        Grid.Column="6"
+                                        Style="{StaticResource ProxyCompactButtonStyle}"
+                                        Click="ModifyProxy_Click"
+                                        Content="修改" />
+
+                                <TextBlock Grid.Row="4"
+                                           Width="58"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FormLabelTextStyle}"
+                                           Text="代理账号:" />
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="1"
+                                         Style="{StaticResource ProxyCompactTextBoxStyle}"
+                                         Text="{Binding ProxyEditorUser, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="4"
+                                           Grid.Column="3"
+                                           Width="58"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FormLabelTextStyle}"
+                                           Text="代理密码:" />
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="4"
+                                         Style="{StaticResource ProxyCompactTextBoxStyle}"
+                                         Text="{Binding ProxyEditorPassword, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="4"
+                                        Grid.Column="6"
+                                        Style="{StaticResource ProxyCompactButtonStyle}"
+                                        Click="AddProxy_Click"
+                                        Content="添加" />
+
+                                <TextBlock Grid.Row="6"
+                                           Width="58"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FormLabelTextStyle}"
+                                           Text="备注信息:" />
+                                <TextBox Grid.Row="6"
+                                         Grid.Column="1"
+                                         Grid.ColumnSpan="4"
+                                         Style="{StaticResource ProxyCompactTextBoxStyle}"
+                                         Text="{Binding ProxyEditorRemark, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+
+                            <TextBlock Margin="0,6,0,0"
+                                       Style="{StaticResource SettingsPageHintTextStyle}"
+                                       Text="配置上游代理（启用后生效）UDP请求无效。上游关就是上游代理，是指本软件收到的请求经过这个代理进行提交。" />
+
+                            <DataGrid x:Name="UpstreamProxyGrid"
+                                      Height="168"
+                                      ItemsSource="{Binding UpstreamProxyItems}"
+                                      SelectedItem="{Binding SelectedUpstreamProxy, Mode=TwoWay}"
+                                      SelectionMode="Single"
+                                      IsReadOnly="True"
+                                      PreviewMouseRightButtonDown="ProcessGrid_PreviewMouseRightButtonDown"
+                                      MouseDoubleClick="EnableProxy_Click"
+                                      Style="{StaticResource ProxyDataGridStyle}">
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="启用" Click="EnableProxy_Click" />
+                                        <MenuItem Header="禁用" Click="DisableProxy_Click" />
+                                        <MenuItem Header="删除" Click="RemoveProxy_Click" />
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="#" Binding="{Binding DisplayIndex}" Width="36" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="代理类型" Binding="{Binding TypeText}" Width="78" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="代理地址" Binding="{Binding Address}" Width="*" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="代理端口" Binding="{Binding Port}" Width="78" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="代理账号" Binding="{Binding User}" Width="88" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="代理密码" Binding="{Binding Password}" Width="88" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="64" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                    <DataGridTextColumn Header="备注" Binding="{Binding Remark}" Width="110" ElementStyle="{StaticResource ProxyGridTextStyle}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Margin="0,6,0,0" Style="{StaticResource FormLabelTextStyle}" Text="对以下地址不使用代理：" />
+                            <TextBox Height="110"
+                                     Margin="0,4,0,0"
                                      AcceptsReturn="True"
+                                     LostFocus="ProxyRules_LostFocus"
                                      Style="{StaticResource SettingsEditorTextBoxStyle}"
-                                     Text="{Binding Settings.GlobalProxyRules}"
+                                     Text="{Binding Settings.GlobalProxyRules, UpdateSourceTrigger=PropertyChanged}"
+                                     TextWrapping="Wrap"
+                                     VerticalContentAlignment="Top"
                                      VerticalScrollBarVisibility="Auto" />
-                            <Border Style="{StaticResource SettingsSectionDividerStyle}" />
-                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                                <Button Margin="0,0,10,0" Style="{StaticResource SettingsPrimaryActionButtonStyle}" Click="EnableProxy_Click" Content="启用代理" />
-                                <Button Style="{StaticResource SettingsSmallActionButtonStyle}" Click="DisableProxy_Click" Content="关闭代理" />
-                            </StackPanel>
                         </StackPanel>
 
                         <StackPanel x:Name="HostsSectionPanel" Visibility="Collapsed">

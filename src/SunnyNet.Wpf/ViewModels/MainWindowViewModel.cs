@@ -77,6 +77,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     private readonly GoBackendClient _backend = new();
     private readonly Dictionary<int, CaptureEntry> _sessionMap = new();
+    private readonly Dictionary<string, string> _socketTagColors = new(StringComparer.Ordinal);
     private readonly HashSet<string> _favoriteKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _selectedProcessFilterKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _selectedDomainFilterKeys = new(StringComparer.OrdinalIgnoreCase);
@@ -111,6 +112,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     private int _captureEventBypassDepth;
     private bool _processDriverLoaded;
     private bool _captureAllProcesses;
+    private string _pickedProcessName = "";
+    private int _pickedProcessPid;
+    private bool _pickedProcessDriverFailed;
     private readonly HashSet<int> _activeProcessPids = new();
     private string _newProcessName = "";
     private string _processSearchText = "";
@@ -122,6 +126,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     private RunningProcessItem? _selectedRunningProcess;
     private ProcessCaptureNameItem? _selectedProcessCaptureName;
     private SearchRequest? _lastTextSearchRequest;
+    private bool _proxyEditorIsSocks = true;
+    private string _proxyEditorParseText = "";
+    private string _proxyEditorAddress = "";
+    private string _proxyEditorPort = "";
+    private string _proxyEditorUser = "";
+    private string _proxyEditorPassword = "";
+    private string _proxyEditorRemark = "";
+    private UpstreamProxyItem? _selectedUpstreamProxy;
 
     public MainWindowViewModel()
     {
@@ -176,6 +188,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     public ObservableCollection<RequestCertificateRuleItem> RequestCertificateItems { get; } = new();
     public ObservableCollection<ProcessCaptureNameItem> ProcessCaptureNames { get; } = new();
     public ObservableCollection<RunningProcessItem> RunningProcesses { get; } = new();
+    public ObservableCollection<UpstreamProxyItem> UpstreamProxyItems { get; } = new();
     private int _filterSelectionGuard;
 
     public bool IsRefreshingSessionFilters => _filterSelectionGuard > 0;
@@ -300,6 +313,59 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         set => SetProperty(ref _captureAllProcesses, value);
     }
 
+    public string PickedProcessName
+    {
+        get => _pickedProcessName;
+        private set
+        {
+            if (!SetProperty(ref _pickedProcessName, value ?? ""))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(HasPickedProcess));
+            OnPropertyChanged(nameof(PickedProcessButtonText));
+            OnPropertyChanged(nameof(PickedProcessToolTip));
+            OnPropertyChanged(nameof(CanClearPickedProcess));
+        }
+    }
+
+    public int PickedProcessPid
+    {
+        get => _pickedProcessPid;
+        private set => SetProperty(ref _pickedProcessPid, value);
+    }
+
+    public bool PickedProcessDriverFailed
+    {
+        get => _pickedProcessDriverFailed;
+        private set
+        {
+            if (!SetProperty(ref _pickedProcessDriverFailed, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(PickedProcessButtonText));
+            OnPropertyChanged(nameof(PickedProcessToolTip));
+            OnPropertyChanged(nameof(CanClearPickedProcess));
+        }
+    }
+
+    public bool HasPickedProcess => !string.IsNullOrWhiteSpace(PickedProcessName);
+
+    public bool CanClearPickedProcess => HasPickedProcess || PickedProcessDriverFailed;
+
+    public string PickedProcessButtonText => PickedProcessDriverFailed
+        ? "驱动失败"
+        : HasPickedProcess ? PickedProcessName : "选择进程";
+
+    public string PickedProcessToolTip => PickedProcessDriverFailed
+        ? "驱动加载失败，右键恢复"
+        : HasPickedProcess
+            ? "右键取消捕获该进程"
+            : "用准星选择窗口，捕获所有同名进程";
+
     public string NewProcessName
     {
         get => _newProcessName;
@@ -344,6 +410,88 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     {
         get => _selectedProcessCaptureName;
         set => SetProperty(ref _selectedProcessCaptureName, value);
+    }
+
+    public bool ProxyEditorIsHttp
+    {
+        get => !_proxyEditorIsSocks;
+        set
+        {
+            if (!value || !_proxyEditorIsSocks)
+            {
+                return;
+            }
+
+            _proxyEditorIsSocks = false;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ProxyEditorIsSocks));
+        }
+    }
+
+    public bool ProxyEditorIsSocks
+    {
+        get => _proxyEditorIsSocks;
+        set
+        {
+            if (!value || _proxyEditorIsSocks)
+            {
+                return;
+            }
+
+            _proxyEditorIsSocks = true;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ProxyEditorIsHttp));
+        }
+    }
+
+    public string ProxyEditorParseText
+    {
+        get => _proxyEditorParseText;
+        set => SetProperty(ref _proxyEditorParseText, value ?? "");
+    }
+
+    public string ProxyEditorAddress
+    {
+        get => _proxyEditorAddress;
+        set => SetProperty(ref _proxyEditorAddress, value ?? "");
+    }
+
+    public string ProxyEditorPort
+    {
+        get => _proxyEditorPort;
+        set => SetProperty(ref _proxyEditorPort, value ?? "");
+    }
+
+    public string ProxyEditorUser
+    {
+        get => _proxyEditorUser;
+        set => SetProperty(ref _proxyEditorUser, value ?? "");
+    }
+
+    public string ProxyEditorPassword
+    {
+        get => _proxyEditorPassword;
+        set => SetProperty(ref _proxyEditorPassword, value ?? "");
+    }
+
+    public string ProxyEditorRemark
+    {
+        get => _proxyEditorRemark;
+        set => SetProperty(ref _proxyEditorRemark, value ?? "");
+    }
+
+    public UpstreamProxyItem? SelectedUpstreamProxy
+    {
+        get => _selectedUpstreamProxy;
+        set
+        {
+            if (!SetProperty(ref _selectedUpstreamProxy, value) || value is null)
+            {
+                return;
+            }
+
+            LoadProxyEditor(value);
+        }
     }
 
     public string SelectedProcessFilterKey
@@ -751,6 +899,93 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
             : $"已标记 {selectedEntries.Length} 条会话";
     }
 
+    public void MarkSocketEntries(IEnumerable<SocketEntry> entries, string? tagColor)
+    {
+        SocketEntry[] selectedEntries = entries
+            .Where(static entry => entry.Theology > 0)
+            .ToArray();
+        if (selectedEntries.Length == 0)
+        {
+            return;
+        }
+
+        string nextColor = tagColor ?? "";
+        foreach (SocketEntry entry in selectedEntries)
+        {
+            string key = BuildSocketTagKey(entry.Theology, entry.Index);
+            if (string.IsNullOrWhiteSpace(nextColor))
+            {
+                _socketTagColors.Remove(key);
+            }
+            else
+            {
+                _socketTagColors[key] = nextColor;
+            }
+
+            entry.TagColor = nextColor;
+        }
+
+        RefreshSessionSocketTagFlags(selectedEntries.Select(static entry => entry.Theology).Distinct());
+        if (ShowTaggedOnly)
+        {
+            RefreshSessionView();
+        }
+
+        StatusRight = string.IsNullOrWhiteSpace(nextColor)
+            ? $"已取消 {selectedEntries.Length} 条消息标记"
+            : $"已标记 {selectedEntries.Length} 条消息";
+    }
+
+    private void ApplyStoredSocketTags(IEnumerable<SocketEntry> entries)
+    {
+        foreach (SocketEntry entry in entries)
+        {
+            if (_socketTagColors.TryGetValue(BuildSocketTagKey(entry.Theology, entry.Index), out string? color))
+            {
+                entry.TagColor = color;
+            }
+        }
+    }
+
+    private void RefreshSessionSocketTagFlags(IEnumerable<int> theologyIds)
+    {
+        foreach (int theology in theologyIds)
+        {
+            if (!_sessionMap.TryGetValue(theology, out CaptureEntry? session))
+            {
+                continue;
+            }
+
+            string prefix = theology.ToString(CultureInfo.InvariantCulture) + ":";
+            session.HasSocketTag = _socketTagColors.Keys.Any(key => key.StartsWith(prefix, StringComparison.Ordinal));
+        }
+    }
+
+    private void RemoveSocketTags(IEnumerable<int> theologyIds)
+    {
+        HashSet<int> ids = theologyIds.ToHashSet();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        foreach (string key in _socketTagColors.Keys.ToArray())
+        {
+            int split = key.IndexOf(':');
+            if (split <= 0 || !int.TryParse(key[..split], out int theology) || !ids.Contains(theology))
+            {
+                continue;
+            }
+
+            _socketTagColors.Remove(key);
+        }
+    }
+
+    private static string BuildSocketTagKey(int theology, int index)
+    {
+        return theology.ToString(CultureInfo.InvariantCulture) + ":" + index.ToString(CultureInfo.InvariantCulture);
+    }
+
     public async Task ResendSessionEntriesAsync(IEnumerable<CaptureEntry> entries, int mode)
     {
         int[] theologyIds = GetTheologyIds(entries);
@@ -947,7 +1182,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
             responseBodyText = WithComparePreviewNotice(BytesToPreviewText(responseDisplayBytes), responseDisplayIncomplete, responseDisplayBytes.Length, responseDisplayTotal);
             responseHeaderText = $"{statusLine}\r\n{responseHeaders}".Trim();
-            responseRawText = $"{responseHeaderText}\r\n\r\n{responseBodyText}".Trim();
+            responseRawText = $"{responseHeaderText}\r\n\r\n{WithComparePreviewNotice(BytesToRawText(responseDisplayBytes), responseDisplayIncomplete, responseDisplayBytes.Length, responseDisplayTotal)}".Trim();
             (byte[] responseRawBytes, _) = BuildHttpBytes(statusLine, responseHeaders, responseBodyBytes);
             responseRawMd5 = ComputeDigest(responseRawBytes, responseBodyIncomplete, DigestKind.Md5);
             responseRawSha256 = ComputeDigest(responseRawBytes, responseBodyIncomplete, DigestKind.Sha256);
@@ -1122,8 +1357,245 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
     public async Task ApplyProxySettingsAsync(bool enableProxy)
     {
+        if (enableProxy)
+        {
+            await EnableUpstreamProxyAsync(SelectedUpstreamProxy ?? UpstreamProxyItems.FirstOrDefault(static item => item.IsEnabled));
+            return;
+        }
+
+        await DisableUpstreamProxyAsync(SelectedUpstreamProxy ?? UpstreamProxyItems.FirstOrDefault(static item => item.IsEnabled));
+    }
+
+    public bool ApplyProxyEditorParse()
+    {
+        if (!UpstreamProxyItem.TryParse(ProxyEditorParseText, out bool isHttp, out string address, out string port, out string user, out string password))
+        {
+            return false;
+        }
+
+        if (ProxyEditorParseText.Contains("://", StringComparison.Ordinal))
+        {
+            _proxyEditorIsSocks = !isHttp;
+            OnPropertyChanged(nameof(ProxyEditorIsSocks));
+            OnPropertyChanged(nameof(ProxyEditorIsHttp));
+        }
+
+        ProxyEditorAddress = address;
+        ProxyEditorPort = port;
+        ProxyEditorUser = user;
+        ProxyEditorPassword = password;
+        return true;
+    }
+
+    public async Task ModifySelectedUpstreamProxyAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(ProxyEditorParseText) && !ApplyProxyEditorParse())
+        {
+            NotificationRequested?.Invoke("提示", "自动解析失败，请检查代理地址格式。");
+            return;
+        }
+
+        if (SelectedUpstreamProxy is null)
+        {
+            StatusRight = string.IsNullOrWhiteSpace(ProxyEditorParseText)
+                ? "请先选中一条代理再修改"
+                : "已解析到表单，请点击添加或先选中一条代理再修改";
+            return;
+        }
+
+        if (!TryReadProxyEditor(out string type, out string address, out string port, out string user, out string password, out string error))
+        {
+            NotificationRequested?.Invoke("提示", error);
+            return;
+        }
+
+        SelectedUpstreamProxy.Type = type;
+        SelectedUpstreamProxy.Address = address;
+        SelectedUpstreamProxy.Port = port;
+        SelectedUpstreamProxy.User = user;
+        SelectedUpstreamProxy.Password = password;
+        SelectedUpstreamProxy.Remark = ProxyEditorRemark.Trim();
+        ProxyEditorParseText = "";
+        await SaveUpstreamProxyListAsync();
+        if (SelectedUpstreamProxy.IsEnabled)
+        {
+            await ApplyActiveUpstreamProxyAsync(true, SelectedUpstreamProxy);
+        }
+
+        StatusRight = "已修改选中上游代理";
+    }
+
+    public async Task AddUpstreamProxyAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(ProxyEditorParseText) && string.IsNullOrWhiteSpace(ProxyEditorAddress) && !ApplyProxyEditorParse())
+        {
+            NotificationRequested?.Invoke("提示", "自动解析失败，请检查代理地址格式。");
+            return;
+        }
+
+        if (!TryReadProxyEditor(out string type, out string address, out string port, out string user, out string password, out string error))
+        {
+            NotificationRequested?.Invoke("提示", error);
+            return;
+        }
+
+        UpstreamProxyItem item = new()
+        {
+            Type = type,
+            Address = address,
+            Port = port,
+            User = user,
+            Password = password,
+            Remark = ProxyEditorRemark.Trim()
+        };
+        UpstreamProxyItems.Add(item);
+        RefreshUpstreamProxyIndexes();
+        SelectedUpstreamProxy = item;
+        ProxyEditorParseText = "";
+        await SaveUpstreamProxyListAsync();
+        StatusRight = "已添加上游代理";
+    }
+
+    public async Task EnableUpstreamProxyAsync(UpstreamProxyItem? item)
+    {
+        if (item is null)
+        {
+            NotificationRequested?.Invoke("提示", "请先选择一条上游代理。");
+            return;
+        }
+
+        foreach (UpstreamProxyItem row in UpstreamProxyItems)
+        {
+            row.IsEnabled = ReferenceEquals(row, item);
+        }
+
+        await SaveUpstreamProxyListAsync();
+        await ApplyActiveUpstreamProxyAsync(true, item);
+        StatusRight = $"已启用上游代理 {item.Address}:{item.Port}";
+    }
+
+    public async Task DisableUpstreamProxyAsync(UpstreamProxyItem? item)
+    {
+        if (item is not null)
+        {
+            item.IsEnabled = false;
+        }
+        else
+        {
+            foreach (UpstreamProxyItem row in UpstreamProxyItems)
+            {
+                row.IsEnabled = false;
+            }
+        }
+
+        await SaveUpstreamProxyListAsync();
+        await ApplyActiveUpstreamProxyAsync(false, item);
+        StatusRight = "已关闭上游代理";
+    }
+
+    public async Task RemoveUpstreamProxyAsync(UpstreamProxyItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        bool wasEnabled = item.IsEnabled;
+        UpstreamProxyItems.Remove(item);
+        if (ReferenceEquals(SelectedUpstreamProxy, item))
+        {
+            _selectedUpstreamProxy = null;
+            OnPropertyChanged(nameof(SelectedUpstreamProxy));
+        }
+
+        RefreshUpstreamProxyIndexes();
+        await SaveUpstreamProxyListAsync();
+        if (wasEnabled)
+        {
+            await ApplyActiveUpstreamProxyAsync(false, null);
+        }
+
+        StatusRight = "已删除上游代理";
+    }
+
+    public async Task ApplyProxyRulesAsync()
+    {
         await _backend.InvokeAsync("保存上游代理使用规则", new { Data = Settings.GlobalProxyRules });
-        await _backend.InvokeAsync("设置上游代理", new { Data = Settings.GlobalProxy, Set = enableProxy });
+        StatusRight = "已保存上游代理规则";
+    }
+
+    private async Task SaveUpstreamProxyListAsync()
+    {
+        foreach (UpstreamProxyItem item in UpstreamProxyItems)
+        {
+            item.Hash = EnsureRuleHash(item.Hash);
+        }
+
+        await _backend.InvokeAsync("保存上游代理列表", new
+        {
+            Data = UpstreamProxyItems.Select(static item => new Dictionary<string, object?>
+            {
+                ["Hash"] = item.Hash,
+                ["Type"] = item.Type,
+                ["Address"] = item.Address,
+                ["Port"] = item.Port,
+                ["User"] = item.User,
+                ["Password"] = item.Password,
+                ["Remark"] = item.Remark,
+                ["Enabled"] = item.IsEnabled
+            }).ToArray()
+        });
+    }
+
+    private async Task ApplyActiveUpstreamProxyAsync(bool enable, UpstreamProxyItem? item)
+    {
+        string url = enable && item is not null ? item.ToProxyUrl() : "";
+        Settings.GlobalProxy = url;
+        await _backend.InvokeAsync("保存上游代理使用规则", new { Data = Settings.GlobalProxyRules });
+        await _backend.InvokeAsync("设置上游代理", new { Data = url, Set = enable && !string.IsNullOrWhiteSpace(url) });
+    }
+
+    private void LoadProxyEditor(UpstreamProxyItem item)
+    {
+        _proxyEditorIsSocks = !item.IsHttp;
+        ProxyEditorAddress = item.Address;
+        ProxyEditorPort = item.Port;
+        ProxyEditorUser = item.User;
+        ProxyEditorPassword = item.Password;
+        ProxyEditorRemark = item.Remark;
+        OnPropertyChanged(nameof(ProxyEditorIsSocks));
+        OnPropertyChanged(nameof(ProxyEditorIsHttp));
+    }
+
+    private bool TryReadProxyEditor(out string type, out string address, out string port, out string user, out string password, out string error)
+    {
+        type = ProxyEditorIsHttp ? "http" : "s5";
+        address = ProxyEditorAddress.Trim();
+        port = ProxyEditorPort.Trim();
+        user = ProxyEditorUser;
+        password = ProxyEditorPassword;
+        error = "";
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            error = "请填写代理地址。";
+            return false;
+        }
+
+        if (!int.TryParse(port, out int number) || number is < 1 or > 65535)
+        {
+            error = "请填写有效的代理端口。";
+            return false;
+        }
+
+        return true;
+    }
+
+    private void RefreshUpstreamProxyIndexes()
+    {
+        for (int i = 0; i < UpstreamProxyItems.Count; i++)
+        {
+            UpstreamProxyItems[i].DisplayIndex = i + 1;
+        }
     }
 
     public async Task ApplyMustTcpSettingsAsync()
@@ -1545,7 +2017,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         if (ok)
         {
             StatusRight = "进程驱动已加载";
-            await ApplyEnabledProcessCaptureNamesAsync();
+            if (CaptureAllProcesses)
+            {
+                await _backend.InvokeAsync("进程驱动添加进程名", new { Name = "{OpenALL}", isSet = true });
+                await ClearPidCaptureAsync();
+                UpdateRunningProcessCaptureState();
+            }
+            else
+            {
+                await ApplyEnabledProcessCaptureNamesAsync();
+            }
+
             await RefreshRunningProcessesAsync();
             return;
         }
@@ -1676,6 +2158,115 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         NewProcessName = "";
         StatusRight = $"已添加进程名：{processName}";
         RaiseProcessCaptureSettingsChanged();
+    }
+
+    public async Task CaptureProcessesByNameAsync(string? name, int pid = 0)
+    {
+        string processName = NormalizeProcessFileName(name);
+        if (string.IsNullOrWhiteSpace(processName))
+        {
+            return;
+        }
+
+        if (CaptureAllProcesses)
+        {
+            NotificationRequested?.Invoke("错误", "当前已捕获所有进程。");
+            return;
+        }
+
+        if (!ProcessDriverLoaded)
+        {
+            await LoadProcessDriverAsync();
+            if (!ProcessDriverLoaded)
+            {
+                PickedProcessName = "";
+                PickedProcessPid = 0;
+                PickedProcessDriverFailed = true;
+                return;
+            }
+        }
+
+        if (HasPickedProcess && !IsSameProcessName(PickedProcessName, processName))
+        {
+            await ClearPickedProcessCaptureAsync(resetButton: false);
+        }
+
+        await AddProcessCaptureNameAsync(processName);
+        await RefreshRunningProcessesAsync();
+
+        RunningProcessItem[] matches = RunningProcesses
+            .Where(item => IsSameProcessName(item.Name, processName))
+            .ToArray();
+        if (matches.Length > 0)
+        {
+            await SetPidCaptureAsync(matches);
+        }
+
+        PickedProcessDriverFailed = false;
+        PickedProcessName = processName;
+        PickedProcessPid = pid > 0 ? pid : matches.FirstOrDefault()?.Pid ?? 0;
+        StatusRight = matches.Length > 0
+            ? $"已捕获 {processName}（{matches.Length} 个同名进程）"
+            : $"已按进程名捕获：{processName}";
+    }
+
+    public async Task ClearPickedProcessCaptureAsync(bool resetButton = true)
+    {
+        string processName = PickedProcessName;
+        if (string.IsNullOrWhiteSpace(processName))
+        {
+            if (resetButton)
+            {
+                PickedProcessDriverFailed = false;
+                PickedProcessPid = 0;
+            }
+
+            return;
+        }
+
+        ProcessCaptureNameItem? nameItem = ProcessCaptureNames.FirstOrDefault(item => IsSameProcessName(item.Name, processName));
+        if (nameItem is not null)
+        {
+            await RemoveProcessCaptureNameAsync(nameItem);
+        }
+
+        RunningProcessItem[] matches = RunningProcesses
+            .Where(item => IsSameProcessName(item.Name, processName))
+            .ToArray();
+        if (matches.Length > 0)
+        {
+            await ClearPidCaptureAsync(matches);
+        }
+
+        if (resetButton)
+        {
+            PickedProcessName = "";
+            PickedProcessPid = 0;
+            PickedProcessDriverFailed = false;
+            StatusRight = $"已取消捕获：{processName}";
+        }
+    }
+
+    private static string NormalizeProcessFileName(string? name)
+    {
+        string processName = (name ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(processName))
+        {
+            return "";
+        }
+
+        processName = Path.GetFileName(processName);
+        return processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+            ? processName
+            : $"{processName}.exe";
+    }
+
+    private static bool IsSameProcessName(string? left, string? right)
+    {
+        string first = Path.GetFileNameWithoutExtension((left ?? "").Trim());
+        string second = Path.GetFileNameWithoutExtension((right ?? "").Trim());
+        return !string.IsNullOrWhiteSpace(first)
+            && string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task RemoveProcessCaptureNameAsync(ProcessCaptureNameItem? item)
@@ -2299,6 +2890,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         await _backend.InvokeAsync("清空");
         Sessions.Clear();
         _sessionMap.Clear();
+        _socketTagColors.Clear();
         _nextIndex = 1;
         _favoriteCount = 0;
         NotifyFavoriteSummaryChanged();
@@ -2880,8 +3472,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         Detail.ResponseBody = WithPreviewNotice(BytesToPreviewText(responseDisplayBytes), responseDisplayTruncated, responseDisplayBytes.Length, responseDisplayBodySize);
         Detail.ResponseText = Detail.ResponseBody;
         Detail.ResponseHex = responseBytes.Length > LargePayloadThresholdBytes ? "" : ToHex(responseBytes);
-        string responseOriginalBody = WithPreviewNotice(BytesToPreviewText(responseBytes), responseBodyTruncated, responseBytes.Length, responseBodySize);
-        Detail.ResponseRaw = $"HTTP {GetInt(args, "StateCode")} {GetString(args, "StateText")}\r\n{Detail.ResponseHeaders}\r\n\r\n{Detail.ResponseBody}".Trim();
+        string responseOriginalBody = WithPreviewNotice(BytesToRawText(responseBytes), responseBodyTruncated, responseBytes.Length, responseBodySize);
+        Detail.ResponseRaw = $"HTTP {GetInt(args, "StateCode")} {GetString(args, "StateText")}\r\n{Detail.ResponseHeaders}\r\n\r\n{WithPreviewNotice(BytesToRawText(responseDisplayBytes), responseDisplayTruncated, responseDisplayBytes.Length, responseDisplayBodySize)}".Trim();
         Detail.ResponseOriginalRaw = $"HTTP {GetInt(args, "StateCode")} {GetString(args, "StateText")}\r\n{Detail.ResponseHeaders}\r\n\r\n{responseOriginalBody}".Trim();
         string responseContentType = GetHeaderValue(responseHeader, "Content-Type");
         Detail.ResponseJson = responseDisplayTruncated ? Detail.ResponseBody : BuildJsonViewText(responseDisplayBytes, Detail.ResponseBody);
@@ -2932,6 +3524,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
 
         Detail.SocketProtocol = protocol;
         Detail.IsSocketSession = true;
+        ApplyStoredSocketTags(newEntries);
         InsertSocketEntriesBeforeClose(newEntries);
     }
 
@@ -2974,6 +3567,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         Settings.Authentication = GetBool(args, "OpenAuthentication");
         Settings.GlobalProxy = GetString(args, "GlobalProxy");
         Settings.GlobalProxyRules = GetString(args, "GlobalProxyRules");
+        ApplyUpstreamProxyListConfig(GetProperty(args, "GlobalProxyList"), Settings.GlobalProxy);
         Settings.GOOS = GetString(args, "GOOS", "windows");
         Settings.IsDarkTheme = false;
 
@@ -3002,6 +3596,46 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         ApplyInterceptRulesConfig(GetProperty(args, "InterceptRules"));
         ApplyRuleCenterConfig(GetProperty(args, "RuleCenter"));
         ApplyRequestCertificateConfig(GetProperty(args, "RequestCertManager"));
+    }
+
+    private void ApplyUpstreamProxyListConfig(JsonElement element, string currentProxy)
+    {
+        List<UpstreamProxyItem> items = new();
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (JsonElement item in element.EnumerateArray())
+            {
+                items.Add(new UpstreamProxyItem
+                {
+                    Hash = GetString(item, "Hash", Guid.NewGuid().ToString("N")),
+                    Type = UpstreamProxyItem.NormalizeType(GetString(item, "Type")),
+                    Address = GetString(item, "Address"),
+                    Port = GetString(item, "Port"),
+                    User = GetString(item, "User"),
+                    Password = GetString(item, "Password"),
+                    Remark = GetString(item, "Remark"),
+                    IsEnabled = GetBool(item, "Enabled")
+                });
+            }
+        }
+
+        if (items.Count == 0 &&
+            UpstreamProxyItem.TryParse(currentProxy, out bool isHttp, out string address, out string port, out string user, out string password))
+        {
+            items.Add(new UpstreamProxyItem
+            {
+                Type = isHttp ? "http" : "s5",
+                Address = address,
+                Port = port,
+                User = user,
+                Password = password,
+                IsEnabled = !UpstreamProxyItem.IsEmptyProxyUrl(currentProxy)
+            });
+        }
+
+        ReplaceRows(UpstreamProxyItems, items);
+        RefreshUpstreamProxyIndexes();
+        SelectedUpstreamProxy = UpstreamProxyItems.FirstOrDefault(static item => item.IsEnabled) ?? UpstreamProxyItems.FirstOrDefault();
     }
 
     private void ApplyHostsRulesConfig(JsonElement element)
@@ -3422,7 +4056,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
             return false;
         }
 
-        if (ShowTaggedOnly && !entry.HasTagColor)
+        if (ShowTaggedOnly && !entry.HasListTag)
         {
             return false;
         }
@@ -3637,7 +4271,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
     private IReadOnlyList<CaptureEntry> GetSessionFilterSource()
     {
         return ShowTaggedOnly
-            ? Sessions.Where(static entry => entry.HasTagColor)
+            ? Sessions.Where(static entry => entry.HasListTag)
                 .ToArray()
             : Sessions.ToArray();
     }
@@ -3680,6 +4314,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
                 _sessionMap.Remove(entry.Theology);
             }
         }
+
+        RemoveSocketTags(theologyIds);
 
         if (deletedSelectedSession)
         {
@@ -4461,8 +5097,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         string responseBody = BytesToPreviewText(responseDisplayBytes);
         Detail.ResponseBody = responseBody;
         Detail.ResponseText = responseBody;
-        Detail.ResponseRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{responseBody}".Trim();
-        Detail.ResponseOriginalRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{BytesToPreviewText(responseBodyBytes)}".Trim();
+        Detail.ResponseRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{BytesToRawText(responseDisplayBytes)}".Trim();
+        Detail.ResponseOriginalRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{BytesToRawText(responseBodyBytes)}".Trim();
         Detail.ResponseHex = responseBodyBytes.Length > LargePayloadThresholdBytes ? "" : ToHex(responseBodyBytes);
         Detail.ResponseHexSource = null;
         Detail.ResponseJson = BuildJsonViewText(responseDisplayBytes, responseBody);
@@ -4572,8 +5208,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
             string responseHeadersText = FormatHeaders(responseHeader);
             Detail.ResponseHeaders = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}".Trim();
             Detail.ResponseBody = WithPreviewNotice(BytesToPreviewText(responseDisplayBytes), responseDisplayTruncated, responseDisplayBytes.Length, responseDisplayBodySize);
-            Detail.ResponseRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{Detail.ResponseBody}".Trim();
-            Detail.ResponseOriginalRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{WithPreviewNotice(BytesToPreviewText(responseBodyBytes), responseBodyTruncated, responseBodyBytes.Length, responseBodySize)}".Trim();
+            Detail.ResponseRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{WithPreviewNotice(BytesToRawText(responseDisplayBytes), responseDisplayTruncated, responseDisplayBytes.Length, responseDisplayBodySize)}".Trim();
+            Detail.ResponseOriginalRaw = $"HTTP {Detail.ResponseStateCode} {Detail.ResponseStateText}\r\n{responseHeadersText}\r\n\r\n{WithPreviewNotice(BytesToRawText(responseBodyBytes), responseBodyTruncated, responseBodyBytes.Length, responseBodySize)}".Trim();
             Detail.ResponseText = Detail.ResponseBody;
             Detail.ResponseHex = responseBodyBytes.Length > LargePayloadThresholdBytes ? "" : ToHex(responseBodyBytes);
             Detail.ResponseCookies = ExtractCookies(responseHeader);
@@ -4604,6 +5240,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         Detail.SocketEntries.ReplaceAll(DeserializeList<SocketEntry>(socketData));
+        ApplyStoredSocketTags(Detail.SocketEntries);
+        RefreshSessionSocketTagFlags(new[] { selected.Theology });
         Detail.SelectedSocketEntry = null;
     }
 
@@ -5025,6 +5663,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IAsyncDisposable
         }
 
         return Encoding.UTF8.GetString(bytes);
+    }
+
+    private static string BytesToRawText(byte[] bytes)
+    {
+        return bytes.Length == 0 ? "" : Encoding.UTF8.GetString(bytes);
     }
 
     private static string BytesToPreviewText(byte[] bytes)

@@ -520,6 +520,15 @@ func event(command string, args *JSON.SyJson) any {
 			app.App.MustTcp(GlobalConfig.MustTcp.Open)
 			_ = app.App.SetMustTcpRegexp(GlobalConfig.MustTcp.Rules)
 		}
+		//上游代理
+		{
+			if GlobalConfig.GlobalProxyRules != "" {
+				_ = app.App.CompileProxyRegexp(GlobalConfig.GlobalProxyRules)
+			}
+			if GlobalConfig.GlobalProxy != "" && GlobalConfig.GlobalProxy != "socket5://:@" && GlobalConfig.GlobalProxy != "http://:@" {
+				_ = app.App.SetGlobalProxy(GlobalConfig.GlobalProxy)
+			}
+		}
 		//证书选择
 		{
 			if !GlobalConfig.Cert.Default {
@@ -897,7 +906,7 @@ func event(command string, args *JSON.SyJson) any {
 				Ico = "下行"
 			}
 			if IsWs {
-				BodyHash += formatSocketTextPreview(_Bytes)
+				BodyHash += formatSocketPreview(wsType, _Bytes)
 			} else if len(_Bytes) > 64 {
 				BodyHash += fmt.Sprintf("% X", _Bytes[:64]) + "..."
 			} else {
@@ -1430,6 +1439,26 @@ func event(command string, args *JSON.SyJson) any {
 			return app.App.SetGlobalProxy(code)
 		}
 		app.App.SetGlobalProxy("socket5://:@")
+		return true
+	case "保存上游代理列表":
+		_TmpLock.Lock()
+		list := make([]ConfigGlobalProxy, 0)
+		for i := 0; i < args.GetNum("Data"); i++ {
+			prefix := "Data[" + strconv.Itoa(i) + "]"
+			list = append(list, ConfigGlobalProxy{
+				Hash:     args.GetData(prefix + ".Hash"),
+				Type:     args.GetData(prefix + ".Type"),
+				Address:  args.GetData(prefix + ".Address"),
+				Port:     args.GetData(prefix + ".Port"),
+				User:     args.GetData(prefix + ".User"),
+				Password: args.GetData(prefix + ".Password"),
+				Remark:   args.GetData(prefix + ".Remark"),
+				Enabled:  args.GetData(prefix+".Enabled") == "true",
+			})
+		}
+		GlobalConfig.GlobalProxyList = list
+		_ = GlobalConfig.saveToFile()
+		_TmpLock.Unlock()
 		return true
 	case "保存强制TCP使用规则":
 		code := strings.ReplaceAll(args.GetData("Data"), "\\\\", "\\")

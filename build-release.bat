@@ -8,7 +8,6 @@ set "ARTIFACTS_DIR=%ROOT_DIR%artifacts"
 set "FRAMEWORK_DIR=%ARTIFACTS_DIR%\Release"
 set "SELF_CONTAINED_DIR=%ARTIFACTS_DIR%\Release-self-contained"
 set "SELF_CONTAINED_BACKEND_SOURCE=%ROOT_DIR%src\SunnyNet.Wpf\bin\Release\net8.0-windows\win-x64\backend"
-set "MCP_EXE=%ROOT_DIR%sunnymcptool\build\bin\sunnynet-mcp.exe"
 
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$xml=[xml](Get-Content -Raw '%PROJECT%'); foreach($group in $xml.Project.PropertyGroup){ if($group.Version){ $group.Version; break } }"`) do set "VERSION=%%V"
 if "%VERSION%"=="" (
@@ -37,7 +36,6 @@ if errorlevel 1 (
 )
 
 call :RemovePdb "%FRAMEWORK_DIR%" || exit /b 1
-call :PackageMcp "%FRAMEWORK_DIR%" || exit /b 1
 call :ZipDir "%FRAMEWORK_DIR%" "%FRAMEWORK_ZIP%" || exit /b 1
 
 echo.
@@ -51,7 +49,6 @@ if errorlevel 1 (
 
 call :CopyBackend "%SELF_CONTAINED_BACKEND_SOURCE%" "%SELF_CONTAINED_DIR%\backend" || exit /b 1
 call :RemovePdb "%SELF_CONTAINED_DIR%" || exit /b 1
-call :PackageMcp "%SELF_CONTAINED_DIR%" || exit /b 1
 call :ZipDir "%SELF_CONTAINED_DIR%" "%SELF_CONTAINED_ZIP%" || exit /b 1
 
 echo.
@@ -61,15 +58,18 @@ echo [Release]   %SELF_CONTAINED_ZIP%
 exit /b 0
 
 :CleanDir
-if exist "%~1" rmdir /s /q "%~1"
 if exist "%~1" (
-    echo [Release] Build failed: unable to clean "%~1".
-    echo [Release] Close any running SunnyNet.exe from this directory and retry.
-    exit /b 1
+    del /f /s /q "%~1\*" >nul 2>nul
+    for /d %%D in ("%~1\*") do rmdir /s /q "%%D" >nul 2>nul
+) else (
+    mkdir "%~1"
+    if errorlevel 1 (
+        echo [Release] Build failed: unable to create "%~1".
+        exit /b 1
+    )
 )
-mkdir "%~1"
-if errorlevel 1 (
-    echo [Release] Build failed: unable to create "%~1".
+if not exist "%~1" (
+    echo [Release] Build failed: output directory "%~1" is missing.
     exit /b 1
 )
 exit /b 0
@@ -82,22 +82,6 @@ dir /s /b "%~1\*.pdb" >nul 2>nul
 if not errorlevel 1 (
     echo [Release] Build failed: PDB files still exist in "%~1".
     exit /b 1
-)
-exit /b 0
-
-:PackageMcp
-echo.
-echo [Release] Packaging MCP bridge into "%~1"...
-if exist "%MCP_EXE%" (
-    if not exist "%~1\mcp" mkdir "%~1\mcp"
-    copy /y "%MCP_EXE%" "%~1\mcp\sunnynet-mcp.exe" >nul
-    if errorlevel 1 (
-        echo [Release] Build failed: unable to copy sunnynet-mcp.exe.
-        exit /b 1
-    )
-    echo [Release] Included: "%~1\mcp\sunnynet-mcp.exe"
-) else (
-    echo [Release] Warning: %MCP_EXE% not found, skipped MCP bridge packaging.
 )
 exit /b 0
 

@@ -71,6 +71,8 @@ public partial class WebSocketMessagesControl : UserControl
     private bool _suspendReplayEditorEvents;
     private bool _replayEditorDirty;
     private bool _syncingSelectedEntry;
+    private bool _autoScrollEnabled;
+    private bool _suppressAutoScrollOnSessionOpen;
     private string _loadedProtobufSchemaPath = "";
     private SocketEntry? _currentEntry;
     private SocketPayloadSnapshot? _currentPayloadSnapshot;
@@ -86,7 +88,7 @@ public partial class WebSocketMessagesControl : UserControl
             SetDefaultReplaySelections();
             RefreshRecentSearchChips();
             UpdateSearchAffordance();
-            RefreshState(autoSelectLatest: !IsInspectorMode);
+            RefreshState(autoSelectLatest: false);
         };
     }
 
@@ -112,6 +114,16 @@ public partial class WebSocketMessagesControl : UserControl
     {
         get => (SocketEntry?)GetValue(SelectedEntryProperty);
         set => SetValue(SelectedEntryProperty, value);
+    }
+
+    public SocketEntry[] GetSelectedEntries()
+    {
+        if (FramesList?.SelectedItem is SocketEntry selected)
+        {
+            return [selected];
+        }
+
+        return SelectedEntry is null ? [] : [SelectedEntry];
     }
 
     private bool IsInspectorMode =>
@@ -246,8 +258,10 @@ public partial class WebSocketMessagesControl : UserControl
         }
 
         control._payloadCache.Clear();
+        control.PrepareOpenedSession();
         control.RebuildEntriesView();
-        control.RefreshState(autoSelectLatest: !control.IsInspectorMode);
+        control.RefreshState(autoSelectLatest: false);
+        control.ScrollFramesToTop();
     }
 
     private static void OnTheologyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
@@ -258,7 +272,9 @@ public partial class WebSocketMessagesControl : UserControl
         }
 
         control._payloadCache.Clear();
-        control.RefreshState(autoSelectLatest: !control.IsInspectorMode);
+        control.PrepareOpenedSession();
+        control.RefreshState(autoSelectLatest: false);
+        control.ScrollFramesToTop();
     }
 
     private static void OnDisplayModeChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
@@ -270,7 +286,7 @@ public partial class WebSocketMessagesControl : UserControl
 
         control.ApplyDisplayModeVisualState();
         control.RebuildEntriesView();
-        control.RefreshState(autoSelectLatest: !control.IsInspectorMode);
+        control.RefreshState(autoSelectLatest: false);
     }
 
     private static void OnSelectedEntryChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
@@ -292,13 +308,23 @@ public partial class WebSocketMessagesControl : UserControl
 
         if (IsInspectorMode)
         {
+            _suppressAutoScrollOnSessionOpen = false;
             return;
         }
 
-        bool shouldAutoSelectLatest = FramesList.SelectedItem is null
-            || FramesList.SelectedIndex >= Math.Max(FramesList.Items.Count - 2, 0);
+        if (args.Action == NotifyCollectionChangedAction.Reset && _suppressAutoScrollOnSessionOpen)
+        {
+            _suppressAutoScrollOnSessionOpen = false;
+            ApplyActiveFilters(autoSelectLatest: _autoScrollEnabled);
+            if (!_autoScrollEnabled)
+            {
+                ScrollFramesToTop();
+            }
+            return;
+        }
 
-        ApplyActiveFilters(autoSelectLatest: !IsInspectorMode && shouldAutoSelectLatest && args.Action == NotifyCollectionChangedAction.Add);
+        _suppressAutoScrollOnSessionOpen = false;
+        ApplyActiveFilters(autoSelectLatest: _autoScrollEnabled);
     }
 
     private async void FramesList_SelectionChanged(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
@@ -481,9 +507,47 @@ public partial class WebSocketMessagesControl : UserControl
         CommitSearchTerm();
     }
 
-    private void JumpToLatest_Click(object sender, RoutedEventArgs routedEventArgs)
+    private void MarkSelectedFrames_Click(object sender, RoutedEventArgs routedEventArgs)
     {
-        SelectLatestVisibleFrame();
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        string tagColor = sender is MenuItem menuItem ? menuItem.Tag?.ToString() ?? "" : "";
+        SocketEntry[] entries = GetSelectedEntries();
+        if (entries.Length == 0)
+        {
+            return;
+        }
+
+        viewModel.MarkSocketEntries(entries, tagColor);
+    }
+
+    private void AutoScrollMenuItem_Click(object sender, RoutedEventArgs routedEventArgs)
+    {
+        _autoScrollEnabled = AutoScrollMenuItem.IsChecked == true;
+        if (_autoScrollEnabled)
+        {
+            SelectLatestVisibleFrame();
+        }
+    }
+
+    private void PrepareOpenedSession()
+    {
+        _autoScrollEnabled = false;
+        _suppressAutoScrollOnSessionOpen = true;
+        SyncAutoScrollMenu();
+    }
+
+    private void SyncAutoScrollMenu()
+    {
+        if (AutoScrollMenuItem is null)
+        {
+            return;
+        }
+
+        AutoScrollMenuItem.IsChecked = _autoScrollEnabled;
     }
 
     private void ReplayWsTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
@@ -717,7 +781,7 @@ public partial class WebSocketMessagesControl : UserControl
             ReplayActionStatusTextBlock.Text = "正在发送重放消息...";
             bool sent = await viewModel.SendSocketFrameAsync(
                 Theology,
-                GetSelectedComboTag(ReplayWsTypeComboBox, entry.TypeLabel),
+                GetSelectedComboTag(ReplayWsTypeComboBox, DefaultWsTypeForEntry(entry)),
                 GetSelectedComboTag(ReplayEncodingComboBox, "UTF8"),
                 GetSelectedComboTag(ReplayDirectionComboBox, entry.Icon == "下行" ? "Client" : "Server"),
                 ReplayEditorTextBox.Text ?? "");
@@ -805,7 +869,7 @@ public partial class WebSocketMessagesControl : UserControl
         CopyFrameTextMenuItem.IsEnabled = hasEntry;
         CopyFrameJsonMenuItem.IsEnabled = hasEntry && entry is { IsBinaryFrame: false, IsTrafficFrame: true };
         CopyFrameHexMenuItem.IsEnabled = hasEntry && entry is { IsTrafficFrame: true };
-        JumpToLatestMenuItem.IsEnabled = FramesList.Items.Count > 0;
+        SyncAutoScrollMenu();
 
         if (entry is null)
         {
@@ -1066,18 +1130,9 @@ public partial class WebSocketMessagesControl : UserControl
             return;
         }
 
-        if (autoSelectLatest)
+        if (autoSelectLatest && visible <= MaxAutoSelectFrameCount)
         {
-            if (visible <= MaxAutoSelectFrameCount)
-            {
-                SelectLatestVisibleFrame();
-            }
-            return;
-        }
-
-        if (FramesList.SelectedItem is null && FramesList.Items.Count > 0 && visible <= MaxAutoSelectFrameCount)
-        {
-            FramesList.SelectedIndex = FramesList.Items.Count - 1;
+            SelectLatestVisibleFrame();
         }
     }
 
@@ -1090,6 +1145,50 @@ public partial class WebSocketMessagesControl : UserControl
 
         FramesList.SelectedIndex = FramesList.Items.Count - 1;
         FramesList.ScrollIntoView(FramesList.SelectedItem);
+    }
+
+    private void ScrollFramesToTop()
+    {
+        if (FramesList is null)
+        {
+            return;
+        }
+
+        FramesList.Dispatcher.BeginInvoke(() =>
+        {
+            if (FramesList.Items.Count <= 0)
+            {
+                return;
+            }
+
+            if (FindVisualChild<ScrollViewer>(FramesList) is { } viewer)
+            {
+                viewer.ScrollToHome();
+                return;
+            }
+
+            FramesList.ScrollIntoView(FramesList.Items[0]);
+        }, DispatcherPriority.Loaded);
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        int count = VisualTreeHelper.GetChildrenCount(parent);
+        for (int index = 0; index < count; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T match)
+            {
+                return match;
+            }
+
+            if (FindVisualChild<T>(child) is { } nested)
+            {
+                return nested;
+            }
+        }
+
+        return null;
     }
 
     private void ApplySelectedMeta(SocketEntry entry)
@@ -1357,7 +1456,7 @@ public partial class WebSocketMessagesControl : UserControl
 
         SpecialFrameCard.Visibility = Visibility.Visible;
 
-        if (entry.Type == "Ping")
+        if (entry.TypeKind == "ping")
         {
             ApplySpecialFrameVisual("#EEF4FF", "#D8E7FF", "#2F7CF6", "PING");
             SpecialFrameTitleTextBlock.Text = "Ping 心跳帧";
@@ -1368,7 +1467,7 @@ public partial class WebSocketMessagesControl : UserControl
             return;
         }
 
-        if (entry.Type == "Pong")
+        if (entry.TypeKind == "pong")
         {
             ApplySpecialFrameVisual("#EEF4FF", "#D8E7FF", "#2F7CF6", "PONG");
             SpecialFrameTitleTextBlock.Text = "Pong 应答帧";
@@ -1379,7 +1478,7 @@ public partial class WebSocketMessagesControl : UserControl
             return;
         }
 
-        if (entry.Type == "Close")
+        if (entry.TypeKind == "Close")
         {
             ParseCloseFrame(snapshot.Bytes, out string codeText, out string reasonText);
             ApplySpecialFrameVisual("#FDECEC", "#F7CDCF", "#D92D20", "CLOSE");
@@ -2042,12 +2141,12 @@ public partial class WebSocketMessagesControl : UserControl
 
     private static string DefaultWsTypeForEntry(SocketEntry entry)
     {
-        return entry.TypeLabel switch
+        return entry.TypeKind switch
         {
             "Text" => "Text",
             "Binary" => "Binary",
-            "Ping" => "Ping",
-            "Pong" => "Pong",
+            "ping" => "Ping",
+            "pong" => "Pong",
             "Close" => "Close",
             _ => entry.IsBinaryFrame || entry.IsControlFrame ? "Binary" : "Text"
         };

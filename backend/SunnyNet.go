@@ -835,7 +835,7 @@ func WSCallback(Conn *SunnyNet.WsConn) {
 			} else {
 				_Type = "Invalid"
 			}
-			BodyHash = formatSocketTextPreview(Body)
+			BodyHash = formatSocketPreview(_Type, Body)
 			if Conn.Type == public.WebsocketServerSend {
 				Ico = "下行"
 			}

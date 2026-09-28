@@ -45,6 +45,7 @@ public sealed class CaptureEntry : ViewModelBase
     private string _notes = "";
     private string _icon = "";
     private string _tagColor = "";
+    private bool _hasSocketTag;
     private string _searchColor = "";
     private CaptureEntryColor _color = new();
     private int _breakMode;
@@ -250,6 +251,16 @@ public sealed class CaptureEntry : ViewModelBase
 
     [JsonIgnore]
     public bool HasTagColor => !string.IsNullOrWhiteSpace(TagColor);
+
+    [JsonIgnore]
+    public bool HasSocketTag
+    {
+        get => _hasSocketTag;
+        set => SetProperty(ref _hasSocketTag, value);
+    }
+
+    [JsonIgnore]
+    public bool HasListTag => HasTagColor || HasSocketTag;
 
     [JsonIgnore]
     public bool IsStrikeMarked => string.Equals(TagColor, StrikeTagColor, StringComparison.Ordinal);

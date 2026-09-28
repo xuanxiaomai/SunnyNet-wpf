@@ -83,6 +83,7 @@ public sealed class HttpSyntaxTextBox : RichTextBox
         PreviewMouseLeftButtonDown += HttpSyntaxTextBox_PreviewMouseLeftButtonDown;
         ContextMenuOpening += HttpSyntaxTextBox_ContextMenuOpening;
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute));
         _defaultContextMenu = CreateDefaultContextMenu();
         ContextMenu = _defaultContextMenu;
     }
@@ -185,9 +186,10 @@ public sealed class HttpSyntaxTextBox : RichTextBox
 
     private void HttpSyntaxTextBox_PreviewKeyDown(object sender, KeyEventArgs keyEventArgs)
     {
-        if (keyEventArgs.Key == Key.A && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        Key key = keyEventArgs.Key == Key.System ? keyEventArgs.SystemKey : keyEventArgs.Key;
+        if (key == Key.A && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
-            MarkLogicalSelectAll();
+            SelectAllText();
             keyEventArgs.Handled = true;
             return;
         }
@@ -312,15 +314,35 @@ public sealed class HttpSyntaxTextBox : RichTextBox
         OpenTextInNotepad(SourceText ?? "");
     }
 
-    private void MarkLogicalSelectAll()
+    private void SelectAllCommand_CanExecute(object sender, CanExecuteRoutedEventArgs canExecuteRoutedEventArgs)
+    {
+        canExecuteRoutedEventArgs.CanExecute = !string.IsNullOrEmpty(SourceText);
+        canExecuteRoutedEventArgs.Handled = true;
+    }
+
+    private void SelectAllCommand_Executed(object sender, ExecutedRoutedEventArgs executedRoutedEventArgs)
+    {
+        SelectAllText();
+        executedRoutedEventArgs.Handled = true;
+    }
+
+    public void SelectAllText()
     {
         _logicalSelectAll = true;
+        Focus();
         try
         {
-            Selection.Select(Document.ContentStart, Document.ContentStart);
+            SelectAll();
         }
         catch
         {
+            try
+            {
+                Selection.Select(Document.ContentStart, Document.ContentEnd);
+            }
+            catch
+            {
+            }
         }
     }
 

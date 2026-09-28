@@ -754,6 +754,16 @@ type ConfigReplaceRules struct {
 	Dest string `json:"Dest"`
 	Hash string `json:"Hash"`
 }
+type ConfigGlobalProxy struct {
+	Hash     string `json:"Hash"`
+	Type     string `json:"Type"`
+	Address  string `json:"Address"`
+	Port     string `json:"Port"`
+	User     string `json:"User"`
+	Password string `json:"Password"`
+	Remark   string `json:"Remark"`
+	Enabled  bool   `json:"Enabled"`
+}
 type ConfigInterceptRule struct {
 	Hash      string `json:"Hash"`
 	Enable    bool   `json:"Enable"`
@@ -848,6 +858,7 @@ type UserConfig struct {
 	AuthenticationUserInfo map[string]string     `json:"AuthenticationUserInfo"`
 	GlobalProxy            string                `json:"GlobalProxy"`
 	GlobalProxyRules       string                `json:"GlobalProxyRules"`
+	GlobalProxyList        []ConfigGlobalProxy   `json:"GlobalProxyList"`
 	ReplaceRules           []ConfigReplaceRules  `json:"ReplaceRules"`
 	HostsRules             []ConfigReplaceRules  `json:"HostsRules"`
 	InterceptRules         []ConfigInterceptRule `json:"InterceptRules"`

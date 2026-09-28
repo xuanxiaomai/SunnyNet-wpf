@@ -376,21 +376,13 @@ func (c *FindValue) Search(Theology, percentage int, request *MapHash.Request) {
 	}
 	if c.Type == "pb" {
 		if c.Range == "全部" || c.Range == "HTTP请求" || c.Range == "HTTP请求Body" {
-			//在请求Body中搜索
-			{
-				if c.caseSensitiveSearch(Theology, _PbToJson(request.Body, c.PbSkip)) {
-					request.Color.Search = c.Color
-					return
-				}
+			if c.caseSensitiveSearch(Theology, _PbToJson(request.Body, c.PbSkip)) {
+				request.Color.Search = c.Color
 			}
 		}
 		if c.Range == "全部" || c.Range == "HTTP响应" || c.Range == "HTTP响应Body" {
-			//在请求响应Body中搜索
-			{
-				if c.caseSensitiveSearch(Theology, _PbToJson(request.Response.Body, c.PbSkip)) {
-					request.Color.Search = c.Color
-					return
-				}
+			if c.caseSensitiveSearch(Theology, _PbToJson(request.Response.Body, c.PbSkip)) {
+				request.Color.Search = c.Color
 			}
 		}
 		if c.Range == "全部" || c.Range == "socketSend" || c.Range == "socketRec" || c.Range == "socketAll" {
@@ -427,7 +419,6 @@ func (c *FindValue) Search(Theology, percentage int, request *MapHash.Request) {
 		if c.Range == "全部" || c.Range == "HTTP请求" || c.Range == "URL" {
 			if c.caseSensitiveSearch(Theology, request.URL) {
 				request.Color.Search = c.Color
-				return
 			}
 		}
 		//在请求协议头中搜索
@@ -445,7 +436,6 @@ func (c *FindValue) Search(Theology, percentage int, request *MapHash.Request) {
 				}
 				if c.caseSensitiveSearch(Theology, _t) {
 					request.Color.Search = c.Color
-					return
 				}
 			}
 		}
@@ -453,7 +443,6 @@ func (c *FindValue) Search(Theology, percentage int, request *MapHash.Request) {
 		if c.Range == "全部" || c.Range == "HTTP请求" || c.Range == "HTTP请求Body" {
 			if c.caseSensitiveSearch(Theology, string(request.Body)) {
 				request.Color.Search = c.Color
-				return
 			}
 		}
 	}
@@ -473,7 +462,6 @@ func (c *FindValue) Search(Theology, percentage int, request *MapHash.Request) {
 				}
 				if c.caseSensitiveSearch(Theology, _t) {
 					request.Color.Search = c.Color
-					return
 				}
 			}
 		}
@@ -481,7 +469,6 @@ func (c *FindValue) Search(Theology, percentage int, request *MapHash.Request) {
 		if c.Range == "全部" || c.Range == "HTTP响应" || c.Range == "HTTP响应Body" {
 			if c.caseSensitiveSearch(Theology, string(request.Response.Body)) {
 				request.Color.Search = c.Color
-				return
 			}
 		}
 	}
@@ -746,10 +733,19 @@ func formatSocketTextPreview(body []byte) string {
 }
 
 func formatSocketPreview(wsType string, body []byte) string {
-	if wsType != "" {
+	if isSocketTextType(wsType) {
 		return formatSocketTextPreview(body)
 	}
 	return formatSocketBodyPreview(body)
+}
+
+func isSocketTextType(wsType string) bool {
+	switch strings.ToLower(strings.TrimSpace(wsType)) {
+	case "text", "文本", "1":
+		return true
+	default:
+		return false
+	}
 }
 
 func replaceBytes(data []byte, find []byte, replacement []byte, caseSensitive bool) ([]byte, int) {

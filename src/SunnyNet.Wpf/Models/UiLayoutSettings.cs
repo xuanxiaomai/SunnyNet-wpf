@@ -12,7 +12,7 @@ public sealed class UiLayoutSettings
     public double WorkspaceSessionRatio { get; set; } = double.NaN;
     public double SessionFilterWidth { get; set; } = 190;
     public double DetailRequestRatio { get; set; } = double.NaN;
-    public string CaptureScopeMode { get; set; } = "All";
+    public bool CaptureAllProcesses { get; set; }
     public bool ShowFavoritesOnly { get; set; }
     public bool ShowTaggedOnly { get; set; }
     public List<string> FavoriteSessionKeys { get; set; } = new();
